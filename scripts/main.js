@@ -1,4 +1,9 @@
-var container = document.getElementById('app-container'),
+var params = {
+        'fullscreen': true
+    },
+
+    container = document.getElementById('app-container'),
+
     two = new Two().appendTo(container)
 
     circle = two.makeCircle(100, 100, 100);
