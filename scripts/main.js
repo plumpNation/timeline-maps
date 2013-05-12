@@ -1,4 +1,6 @@
-var params = {
+var svg,
+
+    params = {
         'fullscreen': true,
     },
 
@@ -12,8 +14,6 @@ var params = {
     two = new Two().appendTo(container)
 
     /**
-     * [setEnding description]
-     *
      * @tutorial http://jonobr1.github.io/two.js/examples/animate-stroke.html
      * @param {svg} group
      * @param {number} t
@@ -37,9 +37,8 @@ var params = {
         );
     };
 
-$.get(assets.location + assets.map + '.svg').then(function (doc) {
-    var svg = $(doc).find('svg')[0],
-        interpretedSvg = two.interpret(svg);
+container.appendSvg(assets.location + assets.map).then(function () {
+    //
 });
 
-two.update();
+// two.update();
