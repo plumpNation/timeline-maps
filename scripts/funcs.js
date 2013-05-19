@@ -9,24 +9,55 @@ String.prototype.hasSvgExtension = function () {
 };
 
 /* UTILS */
-var calculateDistances = function (group) {
-        return _.map(group.children, function (child) {
-            var d = 0,
-                a;
 
-            _.each(child.vertices, function (b, i) {
-                if (i > 0) {
-                    d += a.distanceTo(b);
+/**
+ * Calculates the distance between all the vertices in all the groups
+ * @param  {object} group The group containing children to parse
+ * @return {array}        An array of distances
+ */
+var calculateDistances = function (group) {
+    var distances = _(group.children).map(function (child) {
+            var distance = 0,
+                lastVertex;
+
+            _(child.vertices).each(function (vertex, key) {
+                var betweenVertices;
+
+                if (key > 0) {
+                    betweenVertices = lastVertex.distanceTo(vertex);
+                    distance += betweenVertices;
                 }
-                a = b;
+
+                lastVertex = vertex;
             });
 
-            return d;
+            return distance;
         });
+
+        console.log(distances);
+
+        return distances;
     },
 
-    clamp = function (v, min, max) {
-        return Math.max(Math.min(v, max), min);
+    /**
+     * Restricts a number within two values.
+     *
+     * This one liner is good to know:
+     * Math.max(minValue, Math.min(maxValue, valueToClamp));
+     * taken from http://actionsnippet.com/?p=475
+     *
+     * @param  {number} valueToClamp    The number to clamp
+     * @param  {number} clampMin        Minimum number
+     * @param  {number} clampMax        Maximum number
+     * @return {number}
+     */
+    clamp = function (valueToClamp, clampMin, clampMax) {
+        // If the value to clamp is larger than the max, we must choose the max,
+        // so we choose the smallest out of the two numbers.
+        var maxValue = Math.min(valueToClamp, clampMax);
+
+        // Now return the largest of the two numbers.
+        return Math.max(maxValue, clampMin);
     },
 
     map = function (v, i1, i2, o1, o2) {
@@ -34,7 +65,8 @@ var calculateDistances = function (group) {
     },
 
     cmap = function (v, i1, i2, o1, o2) {
-        return clamp(map(v, i1, i2, o1, o2), o1, o2);
+        var mapped = map(v, i1, i2, o1, o2);
+        return clamp(mapped, o1, o2);
     },
 
     loadSvg = function (url) {
