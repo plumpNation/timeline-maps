@@ -1,117 +1,98 @@
-(function () {
-    'use strict';
+'use strict';
 
-    var svg,
+var svg,
+    interprettedSVG,
 
-        params = {
-            'fullscreen': true,
-        },
+    two,
+    container,
 
-        assets = {
-            'location': 'assets/',
-            'file'    : 'path_ink'//'star'
-        },
+    time = 0,
 
-        container = document.getElementById('app-container'),
+    animationIncrement = 0.00625,
+    animationLength = 0.9999,
 
-        two = new Two(params).appendTo(container),
+    params = {
+        'fullscreen': true,
+    },
 
-        /**
-         * @tutorial http://jonobr1.github.io/two.js/examples/animate-stroke.html
-         * Tried to remove as much as possible to break down into simplest form.
-         *
-         * @see funcs.js All functions where possible are moved out of this view file into funcs.js.
-         * @param {svg} group
-         * @param {number} t
-         */
-        onSvgLoad = function (svg) {
-
-            var startOver,
-
-                interprettedSVG = two.interpret(svg),
-
-                t = 0,
-
-                settings = {
-                    'stroke'    : 'red',
-                    'linewidth' : 10
-                },
-
-                clearT = function () {
-                    t = 0;
-                    setEnding(interprettedSVG, 0);
-
-                    // After calling startOver 60 times, run clearT
-                    // since this is called after the animation is finished,
-                    // the end result is the pause between the end of the animation
-                    // and the beginning of the new one.
-                    startOver = _.after(60, clearT);
-                },
-
-                setEnding = function (group, t) {
-
-                    var i = 0,
-                        traversed = t * group.total,
-                        current = 0;
-
-                    _(group.children).each(function (child) {
-                        var distance = group.distances[i],
-                            min = current,
-                            max = current + distance,
-                            pct = cmap(traversed, min, max, 0, 1);
-
-                        child.ending = pct;
-                        current = max;
-                        i += 1;
-                    });
-                },
-
-                updateTime = function () {
-
-                    if (t < 0.9999) {
-                        t += 0.00625;
-
-                    } else {
-                        startOver();
-                    }
-
-                    setEnding(interprettedSVG, t);
-
-                },
-
-                resizeSvg = function () {
-                    interprettedSVG.translation.set(two.width * 0.5, two.height * 0.5);
-                };
-
-            _(interprettedSVG).extend(settings);
-
-            // centering the svg in the page.
-            interprettedSVG.center().translation.set(two.width * 0.5, two.height * 0.5);
-
-            _(interprettedSVG).extend({
-                distances: calculateDistances(interprettedSVG),
-                total    : 0
-            });
-
-            _(interprettedSVG.distances).each(function (distance) {
-                interprettedSVG.total += distance;
-            });
-
-            clearT();
-
-            // defer makes the callback run at the end of the stack
-            _.defer(function () {
-                two
-                    .bind('resize', resizeSvg)
-                    .bind('update', updateTime)
-                    .play();
-            });
-        };
+    assets = {
+        'location': 'assets/',
+        'file'    : 'path_ink'//'star'
+    },
 
 
+    /**
+     * @tutorial http://jonobr1.github.io/two.js/examples/animate-stroke.html
+     * Tried to remove as much as possible to break down into simplest form.
+     *
+     * @see funcs.js All functions where possible are moved out of this view file into funcs.js.
+     * @param {svg} group
+     * @param {number} t
+     */
+    onSvgLoad = function (svg) {
 
-    loadSvg(assets.location + assets.file).then(onSvgLoad);
+        var startOver,
 
-    // two.update();
+            settings = {
+                'stroke'    : 'red',
+                'linewidth' : 10
+            },
 
-}());
+            resetTime = function () {
+                time = 0;
+                setEnding(interprettedSVG, 0);
+
+                // After calling startOver 60 times, run resetTime.
+                // Since this is called after the animation is finished,
+                // the end result is the pause between the end of the animation
+                // and the beginning of the new one.
+                startOver = _.after(60, resetTime);
+            },
+
+            updateTime = function () {
+                if (time < animationLength) {
+                    time += animationIncrement;
+
+                } else {
+                    startOver();
+                }
+
+                setEnding(interprettedSVG, time);
+            },
+
+            /**
+             * Center and size the svg in the page.
+             *
+             * @return {void}
+             */
+            resizeSvg = function () {
+                interprettedSVG.center().translation.set(two.width * 0.5, two.height * 0.5);
+            };
+
+        interprettedSVG = two.interpret(svg);
+
+        _(interprettedSVG).extend(settings)
+
+        _(interprettedSVG).extend({
+            distances: calculateDistances(interprettedSVG),
+            total    : 0
+        });
+
+        _(interprettedSVG.distances).each(function (distance) {
+            interprettedSVG.total += distance;
+        });
+
+        resetTime();
+        resizeSvg();
+
+        two
+            .bind('resize', resizeSvg)
+            .bind('update', updateTime)
+            .play();
+    };
+
+container = document.getElementById('app-container');
+two       = new Two(params).appendTo(container);
+
+loadSvg(assets.location + assets.file).then(onSvgLoad);
+

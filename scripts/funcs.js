@@ -81,4 +81,30 @@ var calculateDistances = function (group) {
         });
 
         return loading.promise();
+    },
+
+    /**
+     * Decides where the path should end. When animated with the time variable,
+     *
+     *
+     * @param  {object} group The group of paths to set the ending for.
+     * @param  {number} time
+     * @return {void}
+     */
+    setEnding = function (group, time) {
+
+        var i = 0,
+            current = 0,
+            traversed = time * group.total;
+
+        _(group.children).each(function (child) {
+            var distance = group.distances[i],
+                min = current,
+                max = current + distance,
+                pct = cmap(traversed, min, max, 0, 1);
+
+            child.ending = pct;
+            current = max;
+            i += 1;
+        });
     };
