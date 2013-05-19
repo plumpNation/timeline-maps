@@ -9,7 +9,6 @@ var svg,
     time = 0,
 
     animationIncrement = 0.00625,
-    animationLength = 0.9999,
 
     params = {
         'fullscreen': true,
@@ -50,7 +49,7 @@ var svg,
             },
 
             updateTime = function () {
-                if (time < animationLength) {
+                if (time < 0.9999) {
                     time += animationIncrement;
 
                 } else {
@@ -66,17 +65,18 @@ var svg,
              * @return {void}
              */
             resizeSvg = function () {
-                interprettedSVG.center().translation.set(two.width * 0.5, two.height * 0.5);
+                var halfWidth = two.width * 0.5,
+                    halfHeight = two.height * 0.5;
+
+                interprettedSVG.center().translation.set(halfWidth, halfHeight);
             };
 
         interprettedSVG = two.interpret(svg);
 
         _(interprettedSVG).extend(settings)
 
-        _(interprettedSVG).extend({
-            distances: calculateDistances(interprettedSVG),
-            total    : 0
-        });
+        interprettedSVG.distances   = calculateDistances(interprettedSVG);
+        interprettedSVG.total       = 0;
 
         _(interprettedSVG.distances).each(function (distance) {
             interprettedSVG.total += distance;
@@ -89,6 +89,10 @@ var svg,
             .bind('resize', resizeSvg)
             .bind('update', updateTime)
             .play();
+
+        // Can be used simply like this
+        // setEnding(svg, time);
+        // two.update();
     };
 
 container = document.getElementById('app-container');
