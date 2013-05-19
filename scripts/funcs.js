@@ -31,10 +31,9 @@ var calculateDistances = function (group) {
                 lastVertex = vertex;
             });
 
-            return distance;
+            // I'm not sure if rounding is the best idea, however...
+            return Math.round(distance);
         });
-
-        console.log(distances);
 
         return distances;
     },

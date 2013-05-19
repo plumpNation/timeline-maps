@@ -1,103 +1,117 @@
-var svg,
+(function () {
+    'use strict';
 
-    params = {
-        'fullscreen': true,
-    },
+    var svg,
 
-    assets = {
-        'location': 'assets/',
-        'map': 'path_ink'//'star'
-    },
+        params = {
+            'fullscreen': true,
+        },
 
-    container = document.getElementById('app-container'),
+        assets = {
+            'location': 'assets/',
+            'file'    : 'path_ink'//'star'
+        },
 
-    two = new Two().appendTo(container)
+        container = document.getElementById('app-container'),
 
-    /**
-     * @tutorial http://jonobr1.github.io/two.js/examples/animate-stroke.html
-     * Tried to remove as much as possible to break down into simplest form.
-     *
-     * @param {svg} group
-     * @param {number} t
-     */
-    onSvgLoad = function (svg) {
+        two = new Two(params).appendTo(container),
 
-        var fresh = two.interpret(svg),
-            t = 0,
-            startOver,
+        /**
+         * @tutorial http://jonobr1.github.io/two.js/examples/animate-stroke.html
+         * Tried to remove as much as possible to break down into simplest form.
+         *
+         * @see funcs.js All functions where possible are moved out of this view file into funcs.js.
+         * @param {svg} group
+         * @param {number} t
+         */
+        onSvgLoad = function (svg) {
 
-            clearT = function () {
-                t = 0;
-                setEnding(fresh, 0);
+            var startOver,
 
-                // After calling startOver 60 times, run clearT
-                // since this is called after the animation is finished,
-                // the end result is the pause between the end of the animation
-                // and the beginning of the new one.
-                startOver = _.after(60, clearT);
-            },
+                interprettedSVG = two.interpret(svg),
 
-            setEnding = function (group, t) {
+                t = 0,
 
-                var i = 0,
-                    traversed = t * group.total,
-                    current = 0;
+                settings = {
+                    'stroke'    : 'red',
+                    'linewidth' : 10
+                },
 
-                _(group.children).each(function (child) {
-                    var distance = group.distances[i],
-                        min = current,
-                        max = current + distance,
-                        pct = cmap(traversed, min, max, 0, 1);
+                clearT = function () {
+                    t = 0;
+                    setEnding(interprettedSVG, 0);
 
-                    child.ending = pct;
-                    current = max;
-                    i += 1;
-                });
-            },
+                    // After calling startOver 60 times, run clearT
+                    // since this is called after the animation is finished,
+                    // the end result is the pause between the end of the animation
+                    // and the beginning of the new one.
+                    startOver = _.after(60, clearT);
+                },
 
-            updateTime = function () {
+                setEnding = function (group, t) {
 
-                if (t < 0.9999) {
-                    t += 0.00625;
+                    var i = 0,
+                        traversed = t * group.total,
+                        current = 0;
 
-                } else {
-                    startOver();
-                }
+                    _(group.children).each(function (child) {
+                        var distance = group.distances[i],
+                            min = current,
+                            max = current + distance,
+                            pct = cmap(traversed, min, max, 0, 1);
 
-                setEnding(fresh, t);
+                        child.ending = pct;
+                        current = max;
+                        i += 1;
+                    });
+                },
 
-            },
+                updateTime = function () {
 
-            resizeSvg = function () {
-                fresh.translation.set(two.width * 0.5, two.height * 0.5);
-            };
+                    if (t < 0.9999) {
+                        t += 0.00625;
 
-        fresh.total = 0;
-        fresh.stroke = 'red';
-        fresh.linewidth = 40;
+                    } else {
+                        startOver();
+                    }
 
-        // centering the svg in the page.
-        fresh.center().translation.set(two.width / 2, two.height / 2);
+                    setEnding(interprettedSVG, t);
 
-        fresh.distances = calculateDistances(fresh);
+                },
 
-        _(fresh.distances).each(function (d) {
-            fresh.total += d;
-        });
+                resizeSvg = function () {
+                    interprettedSVG.translation.set(two.width * 0.5, two.height * 0.5);
+                };
 
-        clearT();
+            _(interprettedSVG).extend(settings);
 
-        // defer makes the function run at the end of the stack
-        _.defer(function () {
-            two
-                .bind('resize', resizeSvg)
-                .bind('update', updateTime)
-                .play();
-        });
-    };
+            // centering the svg in the page.
+            interprettedSVG.center().translation.set(two.width * 0.5, two.height * 0.5);
+
+            _(interprettedSVG).extend({
+                distances: calculateDistances(interprettedSVG),
+                total    : 0
+            });
+
+            _(interprettedSVG.distances).each(function (distance) {
+                interprettedSVG.total += distance;
+            });
+
+            clearT();
+
+            // defer makes the callback run at the end of the stack
+            _.defer(function () {
+                two
+                    .bind('resize', resizeSvg)
+                    .bind('update', updateTime)
+                    .play();
+            });
+        };
 
 
 
-loadSvg(assets.location + assets.map).then(onSvgLoad);
+    loadSvg(assets.location + assets.file).then(onSvgLoad);
 
-// two.update();
+    // two.update();
+
+}());
