@@ -16,6 +16,8 @@ var params = {
         path = two.makeCurve.call(two, args, !pathClosed);
 
         path.fill = 'none';
+        path.stroke = 'red';
+        path.linewidth = 10;
         // two.update();
     },
 
@@ -30,6 +32,10 @@ var params = {
         reportLocation(x, y);
     },
 
+    addDot = function (x, y) {
+        two.makeCircle(x, y, 3);
+    },
+
     recordClickLocation = function (e) {
         var parentOffset = $(this).parent().offset(),
             // offset -> method allows you to retrieve the current position of an
@@ -38,11 +44,12 @@ var params = {
             y = (e.pageY - parentOffset.top);
 
         storePoint(x, y);
-
+        addDot(x, y);
         reportLocation(x, y);
     };
 
 $(container).on('click', recordClickLocation);
 $('#draw-curve').on('click', drawCurve);
 
+// adds the application svg to the page
 two.update();
