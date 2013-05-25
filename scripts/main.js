@@ -1,12 +1,18 @@
 var params = {
-        'fullscreen': true,
+        //'fullscreen': true,
+        width: '100%',
+        height: '100%'
     },
 
     points = [],
 
     container = document.getElementById('app-container'),
 
-    two = new Two().appendTo(container),
+    two = new Two(params).appendTo(container),
+
+    clearPaths = function () {
+        $('svg path').remove();
+    },
 
     addPathAnimation = function (path) {
         var anim = '<circle cx="" cy="" r="5" fill="red">' +
@@ -33,6 +39,7 @@ var params = {
     },
 
     reportLocation = function (x, y) {
+        return;
         $('#header2').html(
             'X-Position:' + x + ' Y-Position:' + y);
     },
@@ -60,8 +67,9 @@ var params = {
     },
 
     submitCurve = function () {
+        clearPaths();
         drawCurve();
-        addPathAnimation(path);
+        // addPathAnimation(path);
     };
 
 $(container).on('click', recordClickLocation);

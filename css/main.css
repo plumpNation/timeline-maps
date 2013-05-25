@@ -1,4 +1,19 @@
-#app-container {
-    display: inline-block;
-    border: thin solid rgba(0, 0, 0, 0.5);
+* {
+    padding: 0;
+    margin: 0;
+    -webkit-box-spacing: border-box;
+       -moz-box-spacing: border-box;
+            box-spacing: border-box;
+}
+
+html, body,
+#app-wrapper, #app-container {
+    height: 100%;
+    width: 100%;
+}
+
+button {
+    position: absolute;
+    top: 5px;
+    left: 5px;
 }
