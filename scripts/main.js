@@ -8,6 +8,18 @@ var params = {
 
     two = new Two().appendTo(container),
 
+    addPathAnimation = function (path) {
+        var anim = '<circle cx="" cy="" r="5" fill="red">' +
+
+                '<!-- Define the motion path animation -->' +
+                '<animateMotion dur="6s" repeatCount="indefinite">' +
+                   '<mpath xlink:href="#two-' + path.id + '"/>' +
+                '</animateMotion>' +
+            '</circle>';
+
+        $(container).find('svg g').prepend(anim);
+    },
+
     drawCurve = function (e) {
         var pathClosed  = false,
             args        = _.flatten(points),
@@ -18,7 +30,6 @@ var params = {
         path.fill = 'none';
         path.stroke = 'red';
         path.linewidth = 10;
-        // two.update();
     },
 
     reportLocation = function (x, y) {
@@ -46,10 +57,15 @@ var params = {
         storePoint(x, y);
         addDot(x, y);
         reportLocation(x, y);
+    },
+
+    submitCurve = function () {
+        drawCurve();
+        addPathAnimation(path);
     };
 
 $(container).on('click', recordClickLocation);
-$('#draw-curve').on('click', drawCurve);
+$('#draw-curve').on('click', submitCurve);
 
 // adds the application svg to the page
 two.update();
