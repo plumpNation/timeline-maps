@@ -1,7 +1,7 @@
 var params = {
         //'fullscreen': true,
-        width: '100%',
-        height: '100%'
+        width: '600',
+        height: '400'
     },
 
     points = [],
@@ -12,6 +12,10 @@ var params = {
 
     clearPaths = function () {
         $('svg path').remove();
+    },
+
+    clearCircles = function () {
+        $('.circle').remove();
     },
 
     addPathAnimation = function (path) {
@@ -26,36 +30,54 @@ var params = {
         $(container).find('svg g').prepend(anim);
     },
 
+    takePicture = function (e) {
+        // WebActivities
+        var pick = new MozActivity({
+            name: "pick",
+            data: {
+                type: ["image/png", "image/jpg", "image/jpeg"]
+            }
+        });
+
+        pick.onsuccess = function () { 
+            var piccyUrl = window.URL.createObjectURL(this.result.blob);
+            $(container).css({
+                'background-image': piccyUrl
+            });
+        };
+
+        pick.onerror = function () { 
+            alert("Can't view the image!");
+        };
+    },
+
     drawCurve = function (e) {
         var pathClosed  = false,
             args        = _.flatten(points),
             path;
 
+        console.log(args);
+
         path = two.makeCurve.call(two, args, !pathClosed);
 
         path.fill = 'none';
         path.stroke = 'red';
+        path.cap = 'square';
         path.linewidth = 10;
-    },
-
-    reportLocation = function (x, y) {
-        return;
-        $('#header2').html(
-            'X-Position:' + x + ' Y-Position:' + y);
     },
 
     storePoint = function (x, y) {
         var point = new Two.Vector(x, y);
         points.push(point);
-        reportLocation(x, y);
     },
 
     addDot = function (x, y) {
-        two.makeCircle(x, y, 3);
+        var circle = two.makeCircle(x, y, 3);
+        $(circle).addClass('circle');
     },
 
     recordClickLocation = function (e) {
-        var parentOffset = $(this).parent().offset(),
+        var parentOffset = $('#app-container').offset(),
             // offset -> method allows you to retrieve the current position of an
             // element 'relative' to the document.
             x = (e.pageX - parentOffset.left),
@@ -63,7 +85,13 @@ var params = {
 
         storePoint(x, y);
         addDot(x, y);
-        reportLocation(x, y);
+    },
+
+    setupFFstuff = function () {
+        $('<button>')
+            .prop('id', 'take-picture')
+            .text('Snap!')
+            .on('click', takePicture);
     },
 
     submitCurve = function () {
@@ -74,6 +102,10 @@ var params = {
 
 $(container).on('click', recordClickLocation);
 $('#draw-curve').on('click', submitCurve);
+
+if (typeof MozActivity === 'function') {
+    setupFFstuff();
+}
 
 // adds the application svg to the page
 two.update();

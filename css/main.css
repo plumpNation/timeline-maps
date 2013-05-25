@@ -12,7 +12,11 @@ html, body,
     width: 100%;
 }
 
-button {
+#app-container {
+    background-size: contain;
+}
+
+#controls {
     position: absolute;
     top: 5px;
     left: 5px;
