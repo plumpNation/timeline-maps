@@ -1,7 +1,6 @@
 var params = {
-        //'fullscreen': true,
-        width: '600',
-        height: '400'
+        width: '100%',
+        height: '100%'
     },
 
     points = [],
@@ -10,16 +9,12 @@ var params = {
 
     two = new Two(params).appendTo(container),
 
-    clearPaths = function () {
-        $('svg path').remove();
-    },
-
     clearCircles = function () {
         $('.circle').remove();
     },
 
     addPathAnimation = function (path) {
-        var anim = '<circle cx="" cy="" r="5" fill="red">' +
+        var anim = '<circle cx="" cy="" r="45" fill="blue">' +
 
                 '<!-- Define the motion path animation -->' +
                 '<animateMotion dur="6s" repeatCount="indefinite">' +
@@ -27,7 +22,8 @@ var params = {
                 '</animateMotion>' +
             '</circle>';
 
-        $(container).find('svg g').prepend(anim);
+        $(container).find('svg g').append(anim);
+        Two.Utils.setPlaying(true);
     },
 
     takePicture = function (e) {
@@ -51,12 +47,14 @@ var params = {
         };
     },
 
+    clearPoints = function () {
+        points = [];
+    },
+
     drawCurve = function (e) {
         var pathClosed  = false,
             args        = _.flatten(points),
             path;
-
-        console.log(args);
 
         path = two.makeCurve.call(two, args, !pathClosed);
 
@@ -64,6 +62,9 @@ var params = {
         path.stroke = 'red';
         path.cap = 'square';
         path.linewidth = 10;
+
+        clearPoints();
+        return path;
     },
 
     storePoint = function (x, y) {
@@ -87,24 +88,32 @@ var params = {
         addDot(x, y);
     },
 
-    setupFFstuff = function () {
+    addCaptureButton = function () {
         $('<button>')
             .prop('id', 'take-picture')
             .text('Snap!')
-            .on('click', takePicture);
+            .on('click', takePicture)
+            .appendTo('#controls');
+    },
+
+    /**
+     * Firefox OS specific functions
+     * @return {void}
+     */
+    setupForFirefoxOS = function () {
+        addCaptureButton();
     },
 
     submitCurve = function () {
-        clearPaths();
-        drawCurve();
-        // addPathAnimation(path);
+        var path = drawCurve();
+        addPathAnimation(path);
     };
 
 $(container).on('click', recordClickLocation);
 $('#draw-curve').on('click', submitCurve);
 
 if (typeof MozActivity === 'function') {
-    setupFFstuff();
+    setupForFirefoxOS();
 }
 
 // adds the application svg to the page

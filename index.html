@@ -2,7 +2,8 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Draw paths with click</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
+        <title>Draw path with click</title>
         <link rel="stylesheet" href="css/base.css">
         <link rel="stylesheet" href="css/headers.css">
         <link rel="stylesheet" href="css/buttons.css">
@@ -10,12 +11,16 @@
         <link rel="stylesheet" href="css/main.css">
     </head>
     <body>
-        <!-- <h2 id="header2">Click positions</h2> -->
-        <div id="controls">
-            <button id="draw-curve">Draw</button>
-        </div>
+        <section role="region">
+            <header>
+                <h1>Map editor</h1>
+            </header>
+        </section>
 
         <div id="app-wrapper">
+            <div id="controls">
+                <button id="draw-curve">Draw</button>
+            </div>
             <div id="app-container"></div>
         </div>
         <script src="scripts/vendor/underscore.js"></script>
