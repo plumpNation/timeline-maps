@@ -42,20 +42,18 @@ var params    = {
 
         var animateMotion = document.createElementNS(ns, 'animateMotion'),
             mpath         = document.createElementNS(ns, 'mpath'),
-            circle        = document.createElementNS(ns, 'circle'),
             pathId        = '#two-' + path.id,
-            startVertex   = path.vertices[0];
+            startVertex   = path.vertices[0],
+
+            circle        = two.makeCircle(startVertex.x, startVertex.y, 30);
 
         console.log('Adding path animation');
 
-        curvesGroupElement.appendChild(circle);
+        circle.fill        = '#336699';
+        circle.strokeWidth = '5';
+        circle.stroke      = '#FF0000';
 
-        circle.setAttribute('cx'          , startVertex.x);
-        circle.setAttribute('cy'          , startVertex.y);
-        circle.setAttribute('r'           , '60');
-        circle.setAttribute('fill'        , '#336699');
-        circle.setAttribute('stroke-width', '5');
-        circle.setAttribute('stroke'      , '#FF0000');
+        two.add(circle);
 
         animateMotion.setAttribute('dur'        , '6s');
         animateMotion.setAttribute('rotate'     , 'auto');
@@ -64,7 +62,7 @@ var params    = {
         mpath.setAttributeNS(ns2, 'href', pathId);
         animateMotion.appendChild(mpath);
 
-        circle.appendChild(animateMotion);
+        $(prefix + circle.id)[0].appendChild(animateMotion);
     },
 
     takePicture = function (e) {
