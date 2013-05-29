@@ -40,7 +40,8 @@ var params    = {
      */
     addPathAnimation = function (path) {
 
-        var animateMotion = document.createElementNS(ns, 'animateMotion'),
+        var animationGroup = new Two.Group(),
+            animateMotion = document.createElementNS(ns, 'animateMotion'),
             mpath         = document.createElementNS(ns, 'mpath'),
             pathId        = '#two-' + path.id,
             startVertex   = path.vertices[0],
@@ -48,12 +49,13 @@ var params    = {
             circle        = two.makeCircle(startVertex.x, startVertex.y, 30);
 
         console.log('Adding path animation');
+        two.add(animationGroup);
 
         circle.fill        = '#336699';
         circle.strokeWidth = '5';
         circle.stroke      = '#FF0000';
 
-        two.add(circle);
+        animationGroup.add(circle);
 
         animateMotion.setAttribute('dur'        , '6s');
         animateMotion.setAttribute('rotate'     , 'auto');
@@ -62,7 +64,19 @@ var params    = {
         mpath.setAttributeNS(ns2, 'href', pathId);
         animateMotion.appendChild(mpath);
 
-        $(prefix + circle.id)[0].appendChild(animateMotion);
+        // path attributes aren't loaded until the end of the stack
+        _.defer(function () {
+
+            var pathData = $(pathId).attr('d');
+
+            // the two.js transform is set to a matrix and I haven't yet figured it out properly
+            $(prefix + circle.id).removeAttr('transform');
+            $(prefix + animationGroup.id).attr('transform', $(pathId).attr('transform'));
+
+            $(prefix + circle.id)[0].appendChild(animateMotion);
+
+        });
+
     },
 
     takePicture = function (e) {
@@ -119,7 +133,6 @@ var params    = {
         path = drawCurveThrough(args, pathClosed);
 
         curvesGroup.add(path);
-        console.log(curvesGroup.id);
 
         clearPoints();
         return path;
