@@ -16,7 +16,12 @@ var pointsData = [],
             .attr({
                 'cx': x,
                 'cy': y,
-                'r' : 15
+                'r' : 5
+            })
+            .style({
+                'fill': 'none',
+                'stroke': 'grey',
+                'stroke-width': 1
             });
     },
 
@@ -25,20 +30,15 @@ var pointsData = [],
         pointsData.push({'x': x, 'y': y});
     },
 
-    getPointsAsString = function () {
-        var pointsString = '';
-
-        for(var i = 0; i < pointsData.length; i += 1) {
-            pointsString += pointsData[i].x + ',' + pointsData[i].y + ' ';
-        }
-
-        return pointsString;
-    },
+    lineAccessor = d3.svg.line()
+                        .x(function(d) { return d.x; })
+                        .y(function(d) { return d.y; })
+                        .interpolate('cardinal'),
 
     drawCurve = function () {
-        curvesGroup.append('polyline')
+        curvesGroup.append('path')
             .attr({
-                'points': getPointsAsString()
+                'd': lineAccessor(pointsData)
             })
             .style({
                 'fill'  : 'none',
@@ -50,8 +50,11 @@ var pointsData = [],
     };
 
 $('svg').on('click', function (e) {
-    var x = e.clientX,
-        y = e.clientY;
+    var parentOffset = $(this).parent().offset(),
+            // offset -> method allows you to retrieve the current position of an
+            // element 'relative' to the document.
+            x = (e.pageX - parentOffset.left),
+            y = (e.pageY - parentOffset.top);
 
     storePoint(x, y);
 });
