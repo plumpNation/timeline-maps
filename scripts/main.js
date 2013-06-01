@@ -1,29 +1,39 @@
-Raphael("holder", 640, 480, function () {
-    var r = this,
+Raphael('holder', 640, 480, function () {
+    var raphael = this,
 
-        p = r.path("M400 200 C 200 300, 760 500, 200 300").attr({stroke: "#666", opacity: .3, "stroke-width": 2}),
+        path = raphael.path('M400 200 C 200 300, 760 500, 200 300')
+                    .attr({
+                        'stroke'      : '#666666',
+                        'opacity'     : 0.3,
+                        'stroke-width': 2
+                    }),
 
-        triangle = r.path("M 0 0 L 20 10 L 0 20 z").attr({'fill': "#666"}),
+        triangle = raphael.path('M 0 0 L 20 10 L 0 20 z')
+                    .attr({
+                        'fill': '#666'
+                    }),
 
-        len = p.getTotalLength();
+        len = path.getTotalLength(),
+
+        onTick = function () {
+            triangle.attr({along: 0});
+            setTimeout(run);
+        };
 
 
-    r.customAttributes.along = function (v) {
-        var point = p.getPointAtLength(v * len);
+    raphael.customAttributes.along = function (v) {
+        var point = path.getPointAtLength(v * len);
         return {
-            transform: "t" + [point.x, point.y] + "r" + point.alpha
+            transform: 't' + [point.x, point.y] + 'raphael' + point.alpha
         };
     };
 
-    triangle.attr({along: 0});
-
-    var rotateAlongThePath = true;
+    triangle.attr({
+        along: 0
+    });
 
     function run() {
-        triangle.animate({along: 1}, 5000, function () {
-            triangle.attr({along: 0});
-            setTimeout(run);
-        });
+        triangle.animate({along: 1}, 5000, onTick);
     }
     run();
 });
