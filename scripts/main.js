@@ -1,4 +1,5 @@
-var pointsData = [],
+var tempPlotPoints = [],
+    curvesCollection = [],
 
     sampleSVG = d3.select('#viz')
         .append('svg')
@@ -27,7 +28,7 @@ var pointsData = [],
 
     storePoint = function (x, y) {
         addDot(x, y);
-        pointsData.push({'x': x, 'y': y});
+        tempPlotPoints.push({'x': x, 'y': y});
     },
 
     lineAccessor = d3.svg.line()
@@ -36,17 +37,23 @@ var pointsData = [],
                         .interpolate('cardinal'),
 
     drawCurve = function () {
-        curvesGroup.append('path')
+        var path = curvesGroup.append('path')
             .attr({
-                'd': lineAccessor(pointsData)
+                'd': lineAccessor(tempPlotPoints)
             })
             .style({
-                'fill'  : 'none',
-                'stroke': 'red',
-                'stroke-width': 5
-            });
+                'fill'            : 'none',
+                'stroke'          : 'red',
+                'stroke-width'    : 5,
+                'stroke-dasharray': '5,5'
+            }),
 
-        pointsData = [];
+            pathLength = path.node().getTotalLength();
+
+        curvesCollection.push({'path': path, 'length': pathLength});
+
+        // clear plots
+        tempPlotPoints = [];
     };
 
 $('svg').on('click', function (e) {
