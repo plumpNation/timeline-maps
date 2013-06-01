@@ -3,6 +3,8 @@ var tempPlotPoints = [],
 
     prefix = 'curve-',
 
+    tension = 0.7,
+
     idIncrement = 0,
     animationSpeed = 2000,
 
@@ -42,6 +44,7 @@ var tempPlotPoints = [],
     lineAccessor = d3.svg.line()
                         .x(function (d) { return d.x; })
                         .y(function (d) { return d.y; })
+                        .tension(tension)
                         .interpolate('cardinal'),
 
     drawCurve = function () {
@@ -98,19 +101,28 @@ var tempPlotPoints = [],
     },
 
     pathFollowTransition = function (path, follower, duration) {
-        var tweenData = {
-            rotation    : 0,
-            x           : follower.attr('cx'),
-            y           : follower.attr('cy')
-        };
+        var points = getPathData(path).plotPoints,
+
+            startPoint = {
+                x: points[0].x,
+                y: points[0].y
+            },
+
+            tweenData = {
+                rotation    : 0,
+                x           : startPoint.x,
+                y           : startPoint.y
+            };
 
         duration = duration || 2000;
 
         TweenMax.to(tweenData, (duration / 1000), {
             bezier: {
                 type        : 'thru',
+                prepend     : startPoint,
                 autoRotate  : true,
-                values      : getPathData(path).plotPoints
+                values      : getPathData(path).plotPoints,
+                curviness   : tension
             },
 
             onUpdate        : function () {
@@ -135,13 +147,9 @@ var tempPlotPoints = [],
     },
 
     addAnimatedCircleToPath = function (path) {
-        var points = getPathData(path).plotPoints,
-
-            follower = followers.append('circle')
+        var follower = followers.append('circle')
                             .attr({
-                                'r'   : 10,
-                                'cx'  : points[0].x,
-                                'cy'  : points[0].y
+                                'r'   : 10
                             })
                             .style({
                                 'fill': 'red'
