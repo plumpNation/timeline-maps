@@ -74,8 +74,9 @@ var tempPlotPoints = [],
 
         // store it for later!
         elementCollection[thisId] = {
-            'element': path,
-            'length' : pathLength
+            'element'   : path,
+            'length'    : pathLength,
+            'plotPoints': tempPlotPoints
         };
 
         // clear plots
@@ -85,13 +86,39 @@ var tempPlotPoints = [],
         return path;
     },
 
+    getPathData = function (path) {
+        return elementCollection[path.attr('id')];
+    },
+
+    updateFollower = function (tweenData, follower) {
+        follower.attr({
+            'cx': tweenData.x,
+            'cy': tweenData.y
+        });
+    },
+
     pathFollowTransition = function (path, follower, duration) {
+        var tweenData = {
+            rotation    : 0,
+            x           : follower.attr('cx'),
+            y           : follower.attr('cy')
+        };
+
         duration = duration || 2000;
 
-        follower.transition()
-            .duration(duration)
-            .ease('linear')
-            .attrTween('transform', translateAlong(path.node()));
+        TweenMax.to(tweenData, (duration / 1000), {
+            bezier: {
+                type        : 'thru',
+                autoRotate  : true,
+                values      : getPathData(path).plotPoints
+            },
+
+            onUpdate        : function () {
+                updateFollower(tweenData, follower);
+            },
+
+            ease            : 'linear'
+        });
     },
 
     translateAlong = function (path) {
@@ -108,9 +135,13 @@ var tempPlotPoints = [],
     },
 
     addAnimatedCircleToPath = function (path) {
-        var follower = followers.append('circle')
+        var points = getPathData(path).plotPoints,
+
+            follower = followers.append('circle')
                             .attr({
-                                'r': 10
+                                'r'   : 10,
+                                'cx'  : points[0].x,
+                                'cy'  : points[0].y
                             })
                             .style({
                                 'fill': 'red'
@@ -123,12 +154,14 @@ $('svg').on('click', function (e) {
     var parentOffset = $(this).parent().offset(),
             // offset -> method allows you to retrieve the current position of an
             // element 'relative' to the document.
-            x = (e.pageX - parentOffset.left),
-            y = (e.pageY - parentOffset.top);
+            x = e.pageX - parentOffset.left,
+            y = e.pageY - parentOffset.top;
 
     storePoint(x, y);
 });
 
 $('#draw').on('click', function () {
-    addAnimatedCircleToPath(drawCurve());
+    if (tempPlotPoints.length) {
+        addAnimatedCircleToPath(drawCurve());
+    }
 });
