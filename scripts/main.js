@@ -1,5 +1,9 @@
 var tempPlotPoints = [],
-    curvesCollection = [],
+    elementCollection = {},
+
+    prefix = 'curve-',
+
+    idIncrement = 0,
 
     sampleSVG = d3.select('#viz')
         .append('svg')
@@ -37,20 +41,40 @@ var tempPlotPoints = [],
                         .interpolate('cardinal'),
 
     drawCurve = function () {
-        var path = curvesGroup.append('path')
+        var thisId = prefix + (idIncrement++),
+
+            path = curvesGroup.append('path')
+                .attr({
+                    'id': thisId,
+                    'd': lineAccessor(tempPlotPoints)
+                })
+                .style({
+                    'fill'            : 'none',
+                    'stroke'          : 'red',
+                    'stroke-width'    : 5
+                }),
+
+            pathLength = path.node().getTotalLength(),
+
+            dashArrayValue = pathLength + ',' + pathLength;
+
+        path
             .attr({
-                'd': lineAccessor(tempPlotPoints)
+                'stroke-dasharray': dashArrayValue,
+                'stroke-dashoffset': pathLength
             })
-            .style({
-                'fill'            : 'none',
-                'stroke'          : 'red',
-                'stroke-width'    : 5,
-                'stroke-dasharray': '5,5'
-            }),
+            .transition()
+                .duration(2000)
+                .ease('linear')
+                .attr('stroke-dashoffset', 0);
 
-            pathLength = path.node().getTotalLength();
+        console.log(path);
 
-        curvesCollection.push({'path': path, 'length': pathLength});
+        // store it for later!
+        elementCollection[thisId] = {
+            'element': path,
+            'length' : pathLength
+        };
 
         // clear plots
         tempPlotPoints = [];
