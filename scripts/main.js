@@ -4,6 +4,7 @@ var tempPlotPoints = [],
     prefix = 'curve-',
 
     idIncrement = 0,
+    animationSpeed = 2000,
 
     sampleSVG = d3.select('#viz')
         .append('svg')
@@ -11,10 +12,13 @@ var tempPlotPoints = [],
             .attr('height', '100%'),
 
     dotsGroup = sampleSVG.append('g')
-            .attr('class', 'dots'),
+            .attr('id', 'dots'),
 
     curvesGroup = sampleSVG.append('g')
-            .attr('class', 'curves'),
+            .attr('id', 'curves'),
+
+    followers = sampleSVG.append('g')
+            .attr('id', 'followers'),
 
     addDot = function (x, y) {
         dotsGroup.append('circle')
@@ -36,12 +40,12 @@ var tempPlotPoints = [],
     },
 
     lineAccessor = d3.svg.line()
-                        .x(function(d) { return d.x; })
-                        .y(function(d) { return d.y; })
+                        .x(function (d) { return d.x; })
+                        .y(function (d) { return d.y; })
                         .interpolate('cardinal'),
 
     drawCurve = function () {
-        var thisId = prefix + (idIncrement++),
+        var thisId = prefix + (idIncrement),
 
             path = curvesGroup.append('path')
                 .attr({
@@ -64,11 +68,9 @@ var tempPlotPoints = [],
                 'stroke-dashoffset': pathLength
             })
             .transition()
-                .duration(2000)
+                .duration(animationSpeed)
                 .ease('linear')
                 .attr('stroke-dashoffset', 0);
-
-        console.log(path);
 
         // store it for later!
         elementCollection[thisId] = {
@@ -78,6 +80,43 @@ var tempPlotPoints = [],
 
         // clear plots
         tempPlotPoints = [];
+        idIncrement   += 1;
+
+        return path;
+    },
+
+    pathFollowTransition = function (path, follower, duration) {
+        duration = duration || 2000;
+
+        follower.transition()
+            .duration(duration)
+            .ease('linear')
+            .attrTween('transform', translateAlong(path.node()));
+    },
+
+    translateAlong = function (path) {
+        var pathTotalLength = path.getTotalLength();
+
+        return function (d, i, a) {
+            return function (time) {
+                var point = path.getPointAtLength(time * pathTotalLength),
+                    pointString = point.x + ',' + point.y;
+
+                return 'translate(' + pointString + ')';
+            };
+        };
+    },
+
+    addAnimatedCircleToPath = function (path) {
+        var follower = followers.append('circle')
+                            .attr({
+                                'r': 10
+                            })
+                            .style({
+                                'fill': 'red'
+                            });
+
+        pathFollowTransition(path, follower, animationSpeed);
     };
 
 $('svg').on('click', function (e) {
@@ -91,5 +130,5 @@ $('svg').on('click', function (e) {
 });
 
 $('#draw').on('click', function () {
-    drawCurve();
+    addAnimatedCircleToPath(drawCurve());
 });
