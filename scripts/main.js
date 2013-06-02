@@ -8,18 +8,18 @@ var tempPlotPoints = [],
     idIncrement = 0,
     animationSpeed = 2000,
 
-    sampleSVG = d3.select('#viz')
-        .append('svg')
-            .attr('width' , '100%')
-            .attr('height', '100%'),
+    svg = d3.select('#viz')
+            .append('svg')
+                .attr('width' , '100%')
+                .attr('height', '100%'),
 
-    dotsGroup = sampleSVG.append('g')
+    dotsGroup = svg.append('g')
             .attr('id', 'dots'),
 
-    curvesGroup = sampleSVG.append('g')
+    curvesGroup = svg.append('g')
             .attr('id', 'curves'),
 
-    followers = sampleSVG.append('g')
+    followers = svg.append('g')
             .attr('id', 'followers'),
 
     addDot = function (x, y) {
@@ -93,36 +93,32 @@ var tempPlotPoints = [],
         return elementCollection[path.attr('id')];
     },
 
+    /**
+     * On greensock animation frame/tick, the tweenData is adapted and applied to the
+     * follower object/element.
+     *
+     * @param  {object} tweenData The object being animated
+     * @param  {d3 object} follower  [description]
+     * @return {void}
+     */
     updateFollower = function (tweenData, follower) {
-        follower.attr({
-            'cx': tweenData.x,
-            'cy': tweenData.y
-        });
+        var xyPos = 'translate(' + tweenData.x + ',' + tweenData.y + ')',
+            rotation = 'rotate(' + tweenData.rotation + ')';
+
+        follower.attr('transform', xyPos + ' ' + rotation);
     },
 
-    pathFollowTransition = function (path, follower, duration) {
-        var points = getPathData(path).plotPoints,
-
-            startPoint = {
-                x: points[0].x,
-                y: points[0].y
-            },
-
-            tweenData = {
-                rotation    : 0,
-                x           : startPoint.x,
-                y           : startPoint.y
-            };
-
-        duration = duration || 2000;
+    tween = function (tweenData, follower, duration) {
+        // animationSpeed must be set in the parent/global scope
+        duration = duration || animationSpeed;
 
         TweenMax.to(tweenData, (duration / 1000), {
             bezier: {
                 type        : 'thru',
-                prepend     : startPoint,
+                prepend     : tweenData.startPoint,
                 autoRotate  : true,
-                values      : getPathData(path).plotPoints,
-                curviness   : tension
+                values      : tweenData.points,
+                curviness   : 0.8
             },
 
             onUpdate        : function () {
@@ -133,29 +129,42 @@ var tempPlotPoints = [],
         });
     },
 
-    translateAlong = function (path) {
-        var pathTotalLength = path.getTotalLength();
+    animateAlongPath = function (path, follower) {
+        var points = getPathData(path).plotPoints,
 
-        return function (d, i, a) {
-            return function (time) {
-                var point = path.getPointAtLength(time * pathTotalLength),
-                    pointString = point.x + ',' + point.y;
+            startPoint = {
+                x: points[0].x,
+                y: points[0].y
+            },
 
-                return 'translate(' + pointString + ')';
+            tweenData = {
+                rotation    : 0,
+                points      : points,
+                startPoint  : startPoint,
+                x           : startPoint.x,
+                y           : startPoint.y
             };
-        };
+
+        /*console.log(points);
+        console.log(BezierPlugin.bezierThrough(points));*/
+
+        tween(tweenData, follower);
     },
 
-    addAnimatedCircleToPath = function (path) {
-        var follower = followers.append('circle')
-                            .attr({
-                                'r'   : 10
-                            })
-                            .style({
-                                'fill': 'red'
-                            });
+    addFollowerToPath = function (path) {
+        // create a group to contain the arrow head
+        var follower = followers.append('g')
+                            .attr('class', 'follower-container');
 
-        pathFollowTransition(path, follower, animationSpeed);
+            // add the triangle graphpic for the arrow head
+            follower.append('path')
+                    .attr('class', 'follower')
+                    .attr('d', 'M 0 -10 l 20 10 l -20 10 z')
+                    .style({
+                        'fill': 'red'
+                    });
+
+        animateAlongPath(path, follower);
     };
 
 $('svg').on('click', function (e) {
@@ -170,6 +179,6 @@ $('svg').on('click', function (e) {
 
 $('#draw').on('click', function () {
     if (tempPlotPoints.length) {
-        addAnimatedCircleToPath(drawCurve());
+        addFollowerToPath(drawCurve());
     }
 });
