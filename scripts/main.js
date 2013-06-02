@@ -1,7 +1,27 @@
-var sampleSVG = d3.select('#workspace')
+var workspace = d3.select('#workspace')
         .append('svg')
             .attr('width' , '100%')
-            .attr('height', '100%');
+            .attr('height', '100%'),
+
+    $workspace = $(workspace.node()),
+
+    $arrowControls = $('#add-arrow-info, #draw-arrow'),
+
+    getRotation = function (p1, p2) {
+        var deltaY,
+            deltaX,
+            degrees;
+
+        if (!p1 || !p2) {
+            return 0;
+        }
+
+        deltaY  = p2.y - p1.y;
+        deltaX  = p2.x - p1.x;
+        degrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+
+        return degrees;
+    };
 
 var Arrow = function () {
 
@@ -17,19 +37,21 @@ var Arrow = function () {
 
     prefix = 'arrow-',
 
-    dotsGroup = sampleSVG.append('g')
+    dotsGroup = workspace.append('g')
             .attr('id', 'dots'),
 
-    curvesGroup = sampleSVG.append('g')
+    curvesGroup = workspace.append('g')
             .attr('id', 'curves'),
 
-    followers = sampleSVG.append('g')
+    followers = workspace.append('g')
             .attr('id', 'followers'),
 
     lineAccessor = d3.svg.line()
                     .x(function (d) { return d.x; })
                     .y(function (d) { return d.y; })
                     .interpolate('cardinal'),
+
+    addArrowButton = $('#draw-arrow'),
 
     addDot = function (x, y) {
         dotsGroup.append('circle')
@@ -56,7 +78,8 @@ var Arrow = function () {
             path = curvesGroup.append('path')
                 .attr({
                     'id': thisId,
-                    'd': lineAccessor(tempPlotPoints)
+                    'd': lineAccessor(tempPlotPoints),
+                    'class': 'arrow'
                 })
                 .style({
                     'fill'            : 'none',
@@ -89,22 +112,6 @@ var Arrow = function () {
         idIncrement   += 1;
 
         return path;
-    },
-
-    getRotation = function (p1, p2) {
-        var deltaY,
-            deltaX,
-            degrees;
-
-        if (!p1 || !p2) {
-            return 0;
-        }
-
-        deltaY  = p2.y - p1.y;
-        deltaX  = p2.x - p1.x;
-        degrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-
-        return degrees;
     },
 
     translateAlong = function (path, follower) {
@@ -163,24 +170,44 @@ var Arrow = function () {
                 });
 
         pathFollowTransition(path, follower, animationSpeed);
-    };
+    },
 
-    $('svg').on('click', function (e) {
-        var parentOffset = $(this).parent().offset(),
+    onClickWorkspace = function (e) {
+        var parentOffset = $(e.target).parent().offset(),
                 // offset -> method allows you to retrieve the current position of an
                 // element 'relative' to the document.
                 x = (e.pageX - parentOffset.left),
                 y = (e.pageY - parentOffset.top);
 
         storePoint(x, y);
-    });
+    },
 
-    $('#draw-arrow').on('click', function () {
+    onClickAddArrow = function () {
         createPathHead(drawCurve());
-    });
+        unbindUI();
+    },
+
+    unbindUI = function () {
+        $workspace.off('click', onClickWorkspace);
+        addArrowButton.off('click', onClickAddArrow);
+
+        $arrowControls.hide();
+    },
+
+    onClickArrow = function (e) {
+        console.log('clicked arrow ' + this.id);
+    },
+
+    bindUI = function () {
+        $workspace.on('click', onClickWorkspace);
+        $workspace.on('click', '.arrow', onClickArrow);
+        addArrowButton.on('click', onClickAddArrow);
+    };
+
+    bindUI();
 };
 
 $('#add-arrow').on('click', function () {
-    var newArrow = new Arrow();
-    $('#add-arrow-info, #draw-arrow').show();
+    var newArrow = new Arrow(); // needs options
+    $arrowControls.show();
 });
