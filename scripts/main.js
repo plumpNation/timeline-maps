@@ -21,6 +21,10 @@ var workspace = d3.select('#workspace')
         degrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
 
         return degrees;
+    },
+
+    onClickArrow = function (e) {
+        console.log('clicked arrow ' + this.id);
     };
 
 var Arrow = function () {
@@ -37,14 +41,18 @@ var Arrow = function () {
 
     prefix = 'arrow-',
 
+    buildId = function (str) {
+        return prefix + str + '-' + idIncrement;
+    },
+
     dotsGroup = workspace.append('g')
-            .attr('id', 'dots'),
+            .attr('id', buildId('dots')),
 
     curvesGroup = workspace.append('g')
-            .attr('id', 'curves'),
+            .attr('id', buildId('curve')),
 
-    followers = workspace.append('g')
-            .attr('id', 'followers'),
+    arrowHeads = workspace.append('g')
+            .attr('id', buildId('arrowHead')),
 
     lineAccessor = d3.svg.line()
                     .x(function (d) { return d.x; })
@@ -114,7 +122,7 @@ var Arrow = function () {
         return path;
     },
 
-    translateAlong = function (path, follower) {
+    translateAlong = function (path, arrowHead) {
         var pathTotalLength = path.getTotalLength();
 
         /**
@@ -140,14 +148,14 @@ var Arrow = function () {
         };
     },
 
-    pathFollowTransition = function (path, follower, duration) {
+    pathFollowTransition = function (path, arrowHead, duration) {
         duration = duration || 2000;
 
-        follower.transition()
+        arrowHead.transition()
             // transition setters
             .duration(duration)
             .ease('linear')
-            .attrTween('transform', translateAlong(path.node(), follower));
+            .attrTween('transform', translateAlong(path.node(), arrowHead));
     },
 
     createPathHead = function (path) {
@@ -158,18 +166,18 @@ var Arrow = function () {
                           'l -' + size + ' ' + (size * 0.5) + ' z',
 
             // create a group to contain the path head
-            follower    = followers.append('g')
-                            .attr('class', 'follower-container');
+            arrowHead    = arrowHeads.append('g')
+                            .attr('class', 'arrowHead-container');
 
         // add the triangle graphpic for the path head
-        follower.append('path')
-                .attr('class', 'follower')
+        arrowHead.append('path')
+                .attr('class', 'arrowHead')
                 .attr('d', coords)
                 .style({
                     'fill': 'red'
                 });
 
-        pathFollowTransition(path, follower, animationSpeed);
+        pathFollowTransition(path, arrowHead, animationSpeed);
     },
 
     onClickWorkspace = function (e) {
@@ -194,13 +202,8 @@ var Arrow = function () {
         $arrowControls.hide();
     },
 
-    onClickArrow = function (e) {
-        console.log('clicked arrow ' + this.id);
-    },
-
     bindUI = function () {
         $workspace.on('click', onClickWorkspace);
-        $workspace.on('click', '.arrow', onClickArrow);
         addArrowButton.on('click', onClickAddArrow);
     };
 
@@ -211,3 +214,5 @@ $('#add-arrow').on('click', function () {
     var newArrow = new Arrow(); // needs options
     $arrowControls.show();
 });
+
+$workspace.on('click', '.arrow', onClickArrow);
