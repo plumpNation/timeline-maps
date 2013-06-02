@@ -1,0 +1,14 @@
+.element-add-info {
+    position: absolute;
+    background: white;
+    z-index: -1;
+}
+
+.element-add-info,
+.element-add-control {
+    display: none;
+}
+
+.edit-controls {
+    background: grey;
+}

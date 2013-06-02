@@ -1,17 +1,21 @@
-var tempPlotPoints = [],
+var sampleSVG = d3.select('#workspace')
+        .append('svg')
+            .attr('width' , '100%')
+            .attr('height', '100%');
+
+var Arrow = function () {
+
+    var tempPlotPoints = [],
+
     elementCollection = {},
 
-    prefix = 'curve-',
+    animationSpeed = 2000,
+
+    idIncrement = 0,
 
     lastPoint,
 
-    idIncrement = 0,
-    animationSpeed = 2000,
-
-    sampleSVG = d3.select('#viz')
-        .append('svg')
-            .attr('width' , '100%')
-            .attr('height', '100%'),
+    prefix = 'arrow-',
 
     dotsGroup = sampleSVG.append('g')
             .attr('id', 'dots'),
@@ -139,18 +143,18 @@ var tempPlotPoints = [],
             .attrTween('transform', translateAlong(path.node(), follower));
     },
 
-    addAnimatedCircleToPath = function (path) {
-        var size        = 20, // size of the arrow head
+    createPathHead = function (path) {
+        var size        = 20, // size of the path head
 
             coords      = 'M 0 -' + (size * 0.5) + ' ' +
                           'l ' + size + ' ' + (size * 0.5) + ' ' +
                           'l -' + size + ' ' + (size * 0.5) + ' z',
 
-            // create a group to contain the arrow head
+            // create a group to contain the path head
             follower    = followers.append('g')
                             .attr('class', 'follower-container');
 
-        // add the triangle graphpic for the arrow head
+        // add the triangle graphpic for the path head
         follower.append('path')
                 .attr('class', 'follower')
                 .attr('d', coords)
@@ -161,16 +165,22 @@ var tempPlotPoints = [],
         pathFollowTransition(path, follower, animationSpeed);
     };
 
-$('svg').on('click', function (e) {
-    var parentOffset = $(this).parent().offset(),
-            // offset -> method allows you to retrieve the current position of an
-            // element 'relative' to the document.
-            x = (e.pageX - parentOffset.left),
-            y = (e.pageY - parentOffset.top);
+    $('svg').on('click', function (e) {
+        var parentOffset = $(this).parent().offset(),
+                // offset -> method allows you to retrieve the current position of an
+                // element 'relative' to the document.
+                x = (e.pageX - parentOffset.left),
+                y = (e.pageY - parentOffset.top);
 
-    storePoint(x, y);
-});
+        storePoint(x, y);
+    });
 
-$('#draw').on('click', function () {
-    addAnimatedCircleToPath(drawCurve());
+    $('#draw-arrow').on('click', function () {
+        createPathHead(drawCurve());
+    });
+};
+
+$('#add-arrow').on('click', function () {
+    var newArrow = new Arrow();
+    $('#add-arrow-info, #draw-arrow').show();
 });
