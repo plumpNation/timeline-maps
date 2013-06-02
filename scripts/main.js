@@ -152,14 +152,20 @@ var tempPlotPoints = [],
     },
 
     addFollowerToPath = function (path) {
-        // create a group to contain the arrow head
-        var follower = followers.append('g')
+        var size        = 20, // size of the arrow head
+
+            coords      = 'M 0 -' + (size * 0.5) + ' ' +
+                          'l ' + size + ' ' + (size * 0.5) + ' ' +
+                          'l -' + size + ' ' + (size * 0.5) + ' z',
+
+            // create a group to contain the arrow head
+            follower    = followers.append('g')
                             .attr('class', 'follower-container');
 
             // add the triangle graphpic for the arrow head
             follower.append('path')
                     .attr('class', 'follower')
-                    .attr('d', 'M 0 -10 l 20 10 l -20 10 z')
+                    .attr('d', coords)
                     .style({
                         'fill': 'red'
                     });
