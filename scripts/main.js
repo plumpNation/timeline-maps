@@ -125,7 +125,7 @@ var tempPlotPoints = [],
                 updateFollower(tweenData, follower);
             },
 
-            ease            : 'linear'
+            ease            : Linear.easeNone
         });
     },
 
@@ -145,8 +145,8 @@ var tempPlotPoints = [],
                 y           : startPoint.y
             };
 
-        /*console.log(points);
-        console.log(BezierPlugin.bezierThrough(points));*/
+        console.log(points);
+        console.log(BezierPlugin.bezierThrough(points, tension, true));
 
         tween(tweenData, follower);
     },
