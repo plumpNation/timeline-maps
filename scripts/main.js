@@ -3,6 +3,8 @@ var tempPlotPoints = [],
 
     prefix = 'curve-',
 
+    lastPoint,
+
     idIncrement = 0,
     animationSpeed = 2000,
 
@@ -19,6 +21,11 @@ var tempPlotPoints = [],
 
     followers = sampleSVG.append('g')
             .attr('id', 'followers'),
+
+    lineAccessor = d3.svg.line()
+                    .x(function (d) { return d.x; })
+                    .y(function (d) { return d.y; })
+                    .interpolate('cardinal'),
 
     addDot = function (x, y) {
         dotsGroup.append('circle')
@@ -38,11 +45,6 @@ var tempPlotPoints = [],
         addDot(x, y);
         tempPlotPoints.push({'x': x, 'y': y});
     },
-
-    lineAccessor = d3.svg.line()
-                        .x(function (d) { return d.x; })
-                        .y(function (d) { return d.y; })
-                        .interpolate('cardinal'),
 
     drawCurve = function () {
         var thisId = prefix + (idIncrement),
@@ -85,36 +87,76 @@ var tempPlotPoints = [],
         return path;
     },
 
-    pathFollowTransition = function (path, follower, duration) {
-        duration = duration || 2000;
+    getRotation = function (p1, p2) {
+        var deltaY,
+            deltaX,
+            degrees;
 
-        follower.transition()
-            .duration(duration)
-            .ease('linear')
-            .attrTween('transform', translateAlong(path.node()));
+        if (!p1 || !p2) {
+            return 0;
+        }
+
+        deltaY  = p2.y - p1.y;
+        deltaX  = p2.x - p1.x;
+        degrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+
+        return degrees;
     },
 
-    translateAlong = function (path) {
+    translateAlong = function (path, follower) {
         var pathTotalLength = path.getTotalLength();
 
-        return function (d, i, a) {
+        /**
+         * The tween function is invoked when the transition starts on each element, being passed
+         * the current datum d, the current index i and the current attribute value a, with the this
+         * context as the current DOM element. The return value of tween must be an interpolator: a
+         * function that maps a parametric value t in the domain [0,1] to a color, number or arbitrary
+         * value.
+         *
+         * @return {function}
+         */
+        return function tween (d, i, a) {
+            // this is the onRenderTick for the path animation for a curve
             return function (time) {
                 var point = path.getPointAtLength(time * pathTotalLength),
-                    pointString = point.x + ',' + point.y;
+                    pointString = point.x + ',' + point.y,
+                    rotation = getRotation(lastPoint || point, point);
 
-                return 'translate(' + pointString + ')';
+                lastPoint = point;
+
+                return 'translate(' + pointString + ') rotate(' + rotation + ')';
             };
         };
     },
 
+    pathFollowTransition = function (path, follower, duration) {
+        duration = duration || 2000;
+
+        follower.transition()
+            // transition setters
+            .duration(duration)
+            .ease('linear')
+            .attrTween('transform', translateAlong(path.node(), follower));
+    },
+
     addAnimatedCircleToPath = function (path) {
-        var follower = followers.append('circle')
-                            .attr({
-                                'r': 10
-                            })
-                            .style({
-                                'fill': 'red'
-                            });
+        var size        = 20, // size of the arrow head
+
+            coords      = 'M 0 -' + (size * 0.5) + ' ' +
+                          'l ' + size + ' ' + (size * 0.5) + ' ' +
+                          'l -' + size + ' ' + (size * 0.5) + ' z',
+
+            // create a group to contain the arrow head
+            follower    = followers.append('g')
+                            .attr('class', 'follower-container');
+
+        // add the triangle graphpic for the arrow head
+        follower.append('path')
+                .attr('class', 'follower')
+                .attr('d', coords)
+                .style({
+                    'fill': 'red'
+                });
 
         pathFollowTransition(path, follower, animationSpeed);
     };
