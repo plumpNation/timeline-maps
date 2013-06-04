@@ -1,29 +1,35 @@
 var Arrow = function (workspace) {
 
-    var tempPlotPoints = [],
-
-    elementCollection = {},
+    var pointsData = [],
 
     animationSpeed = 2000,
 
-    idIncrement = 0,
+    idIncrement = $('.arrow-path').length,
 
-    lastPoint,
+    arrowColor = 'red',
 
     prefix = 'arrow-',
+
+    thisId = prefix + idIncrement,
 
     buildId = function (str) {
         return prefix + str + '-' + idIncrement;
     },
 
-    dotsGroup = workspace.append('g')
-            .attr('id', buildId('dots')),
+    container = workspace.append('g')
+            .attr({
+                'id': thisId,
+                'class': 'element-container'
+            });
 
     curvesGroup = workspace.append('g')
             .attr('id', buildId('curve')),
 
     arrowHeads = workspace.append('g')
             .attr('id', buildId('arrowHead')),
+
+    dotsGroup = workspace.append('g')
+            .attr('id', buildId('dots')),
 
     lineAccessor = d3.svg.line()
                     .x(function (d) { return d.x; })
@@ -32,42 +38,36 @@ var Arrow = function (workspace) {
 
     addArrowButton = $('#draw-arrow'),
 
-    addDot = function (x, y) {
+    redrawPath = function () {
+
+    },
+
+    onPointDrag = function () {
+        redrawPath();
+    },
+
+    addPoint = function (x, y) {
         dotsGroup.append('circle')
             .attr({
                 'cx': x,
                 'cy': y,
-                'r' : 5
+                'r' : 15
             })
             .style({
-                'fill': 'none',
-                'stroke': 'grey',
+                'fill'        : 'rgba(0, 0, 0, 0.3)',
+                'stroke'      : 'grey',
                 'stroke-width': 1
-            });
+            })
+            .call(d3.behavior.drag().on('drag', onPointDrag));
     },
 
     storePoint = function (x, y) {
-        addDot(x, y);
-        tempPlotPoints.push({'x': x, 'y': y});
+        addPoint(x, y);
+        pointsData.push({'x': x, 'y': y});
     },
 
-    drawCurve = function () {
-        var thisId = prefix + (idIncrement),
-
-            path = curvesGroup.append('path')
-                .attr({
-                    'id': thisId,
-                    'd': lineAccessor(tempPlotPoints),
-                    'class': 'arrow'
-                })
-                .style({
-                    'fill'            : 'none',
-                    'stroke'          : 'red',
-                    'stroke-width'    : 5
-                }),
-
-            pathLength = path.node().getTotalLength(),
-
+    animatePath = function (path, animationSpeed) {
+        var pathLength = path.node().getTotalLength(),
             dashArrayValue = pathLength + ',' + pathLength;
 
         path
@@ -79,6 +79,26 @@ var Arrow = function (workspace) {
                 .duration(animationSpeed)
                 .ease('linear')
                 .attr('stroke-dashoffset', 0);
+    },
+
+    animateArrow = function (path, arrowHead) {
+        animatePath(path, animationSpeed);
+        animateArrowHead(path, arrowHead, animationSpeed);
+    },
+
+    drawPath = function () {
+        var path = curvesGroup.append('path')
+                .attr({
+                    'd': lineAccessor(pointsData),
+                    'class': 'arrow-path'
+                })
+                .style({
+                    'fill'            : 'none',
+                    'stroke'          : 'red',
+                    'stroke-width'    : 5
+                }),
+
+            pathLength = path.node().getTotalLength();
 
         // store it for later!
         elementCollection[thisId] = {
@@ -86,15 +106,12 @@ var Arrow = function (workspace) {
             'length' : pathLength
         };
 
-        // clear plots
-        tempPlotPoints = [];
-        idIncrement   += 1;
-
         return path;
     },
 
     translateAlong = function (path, arrowHead) {
-        var pathTotalLength = path.getTotalLength();
+        var pathNode = path.node(),
+            pathTotalLength = pathNode.getTotalLength();
 
         /**
          * The tween function is invoked when the transition starts on each element, being passed
@@ -106,9 +123,11 @@ var Arrow = function (workspace) {
          * @return {function}
          */
         return function tween (d, i, a) {
+            var lastPoint;
+
             // this is the onRenderTick for the path animation for a curve
             return function (time) {
-                var point = path.getPointAtLength(time * pathTotalLength),
+                var point = pathNode.getPointAtLength(time * pathTotalLength),
                     pointString = point.x + ',' + point.y,
                     rotation = getRotation(lastPoint || point, point);
 
@@ -119,36 +138,50 @@ var Arrow = function (workspace) {
         };
     },
 
-    pathFollowTransition = function (path, arrowHead, duration) {
+    animateArrowHead = function (path, arrowHead, duration) {
         duration = duration || 2000;
 
         arrowHead.transition()
             // transition setters
             .duration(duration)
             .ease('linear')
-            .attrTween('transform', translateAlong(path.node(), arrowHead));
+            .attrTween('transform', translateAlong(path, arrowHead));
     },
 
-    createPathHead = function (path) {
-        var size        = 20, // size of the path head
+    drawArrowHead = function (path) {
+        var size = 20, // size of the path head
+            halfSize = size * 0.5,
 
-            coords      = 'M 0 -' + (size * 0.5) + ' ' +
-                          'l ' + size + ' ' + (size * 0.5) + ' ' +
-                          'l -' + size + ' ' + (size * 0.5) + ' z',
+            pathNode = path.node(),
+
+            // triangle info
+            pathData = 'M 0 -' + halfSize + ' ' +
+                        'l ' + size + ' ' + halfSize + ' ' +
+                        'l -' + size + ' ' + halfSize + ' z',
 
             // create a group to contain the path head
-            arrowHead    = arrowHeads.append('g')
-                            .attr('class', 'arrowHead-container');
+            arrowHead = arrowHeads.append('g')
+                            .attr('class', 'arrowHead-container'),
 
-        // add the triangle graphpic for the path head
+            pathLength = pathNode.getTotalLength(),
+
+            endPoint = pathNode.getPointAtLength(pathLength),
+
+            angle = getRotation(pathNode.getPointAtLength(pathLength - 1), endPoint);
+
+        // add the triangle graphic for the arrow head
         arrowHead.append('path')
-                .attr('class', 'arrowHead')
-                .attr('d', coords)
-                .style({
-                    'fill': 'red'
-                });
+            .attr({
+                'd'        : pathData,
+                'class'    : 'arrowHead', // combine these attrs
+                'transform': 'translate(' + endPoint.x + ',' + endPoint.y + ')' +
+                             'rotate(' + angle + ')'
+            })
+            .style({
+                'fill': arrowColor
+            });
 
-        pathFollowTransition(path, arrowHead, animationSpeed);
+        return arrowHead;
     },
 
     onClickWorkspace = function (e) {
@@ -162,7 +195,10 @@ var Arrow = function (workspace) {
     },
 
     onClickAddArrow = function () {
-        createPathHead(drawCurve());
+        var path = drawPath(),
+            arrowHead = drawArrowHead(path);
+
+        // animateArrow(path, arrowHead);
         unbindUI();
     },
 

@@ -5,6 +5,8 @@ var workspace = d3.select('#workspace')
 
     $workspace = $(workspace.node()),
 
+    elementCollection = {},
+
     $arrowControls = $('#add-arrow-info, #draw-arrow'),
 
     getRotation = function (p1, p2) {
@@ -21,10 +23,6 @@ var workspace = d3.select('#workspace')
         degrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
 
         return degrees;
-    },
-
-    onClickArrow = function (e) {
-        console.log('clicked arrow ' + this.id);
     };
 
 
@@ -32,5 +30,3 @@ $('#add-arrow').on('click', function () {
     var newArrow = new Arrow(workspace); // needs options
     $arrowControls.show();
 });
-
-$workspace.on('click', '.arrow', onClickArrow);
