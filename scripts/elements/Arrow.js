@@ -22,13 +22,15 @@ var Arrow = function (workspace) {
                 'class': 'element-container'
             });
 
-    curvesGroup = workspace.append('g')
+    pathContainer = workspace.append('g')
             .attr('id', buildId('curve')),
 
-    arrowHeads = workspace.append('g')
+    $pathContainer = $(pathContainer.node()),
+
+    arrowHeadContainer = workspace.append('g')
             .attr('id', buildId('arrowHead')),
 
-    dotsGroup = workspace.append('g')
+    dotsContainer = workspace.append('g')
             .attr('id', buildId('dots')),
 
     lineAccessor = d3.svg.line()
@@ -39,7 +41,8 @@ var Arrow = function (workspace) {
     addArrowButton = $('#draw-arrow'),
 
     redrawPath = function () {
-
+        $pathContainer.empty();
+        drawPath();
     },
 
     onPointDrag = function () {
@@ -47,7 +50,7 @@ var Arrow = function (workspace) {
     },
 
     addPoint = function (x, y) {
-        dotsGroup.append('circle')
+        dotsContainer.append('circle')
             .attr({
                 'cx': x,
                 'cy': y,
@@ -87,7 +90,7 @@ var Arrow = function (workspace) {
     },
 
     drawPath = function () {
-        var path = curvesGroup.append('path')
+        var path = pathContainer.append('path')
                 .attr({
                     'd': lineAccessor(pointsData),
                     'class': 'arrow-path'
@@ -160,7 +163,7 @@ var Arrow = function (workspace) {
                         'l -' + size + ' ' + halfSize + ' z',
 
             // create a group to contain the path head
-            arrowHead = arrowHeads.append('g')
+            arrowHead = arrowHeadContainer.append('g')
                             .attr('class', 'arrowHead-container'),
 
             pathLength = pathNode.getTotalLength(),
