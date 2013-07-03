@@ -6,8 +6,6 @@ var Arrow = function (workspace) {
 
         idIncrement = $('.arrow-path').length,
 
-        arrowColor = 'red',
-
         prefix = 'arrow-',
 
         thisId = prefix + idIncrement,
@@ -17,10 +15,8 @@ var Arrow = function (workspace) {
         },
 
         wrapper = workspace.append('g')
-                .attr({
-                    'id': thisId,
-                    'class': 'element-container'
-                }),
+                .attr('id', thisId)
+                .classed('element-container', true)
 
         pathContainer = wrapper.append('g')
                 .attr('id', buildId('curve')),
@@ -30,8 +26,8 @@ var Arrow = function (workspace) {
         arrowHeadContainer = wrapper.append('g')
                 .attr('id', buildId('arrowHead')),
 
-        dotsContainer = wrapper.append('g')
-                .attr('id', buildId('dots')),
+        pointsContainer = wrapper.append('g')
+                .attr('id', buildId('points')),
 
         lineAccessor = d3.svg.line()
                         .x(function (d) { return d.x; })
@@ -77,21 +73,8 @@ var Arrow = function (workspace) {
         },
 
         addPoint = function (x, y) {
-            var index = pointsData.push({'x': x, 'y': y}) - 1,
-                k = dotsContainer.append('circle')
-                    .style({
-                        'fill'        : 'rgba(0, 0, 0, 0.3)',
-                        'stroke'      : 'grey',
-                        'stroke-width': 1
-                    })
-                    .attr({
-                        'cx'   : x,
-                        'cy'   : y,
-                        'r'    : 15,
-                        'class': 'draggable',
-                        'data-index': index
-                    })
-                    .call(pointDrag);
+            pointsData.push({'x': x, 'y': y});
+            bindPoints();
         },
 
         animatePath = function (path, animationSpeed) {
@@ -100,7 +83,7 @@ var Arrow = function (workspace) {
 
             path
                 .attr({
-                    'stroke-dasharray': dashArrayValue,
+                    'stroke-dasharray' : dashArrayValue,
                     'stroke-dashoffset': pathLength
                 })
                 .transition()
@@ -116,15 +99,8 @@ var Arrow = function (workspace) {
 
         drawPath = function () {
             var path = pathContainer.append('path')
-                    .attr({
-                        'd': lineAccessor(pointsData),
-                        'class': 'arrow-path'
-                    })
-                    .style({
-                        'fill'            : 'none',
-                        'stroke'          : 'red',
-                        'stroke-width'    : 5
-                    }),
+                    .attr('d', lineAccessor(pointsData))
+                    .classed('arrow-path', true),
 
                 pathLength = path.node().getTotalLength();
 
@@ -195,21 +171,16 @@ var Arrow = function (workspace) {
 
                 // create a group to contain the path head
                 arrowHead = arrowHeadContainer.append('g')
-                                .attr({
-                                    'class': 'arrowHead-container',
-                                    'transform': 'translate(' + [endPoint.x, endPoint.y] + ')' +
+                                .attr(
+                                    'transform', 'translate(' + [endPoint.x, endPoint.y] + ')' +
                                                  'rotate(' + angle + ')'
-                                 });
+                                 )
+                                .classed('arrowHead-container', true);
 
             // add the triangle graphic for the arrow head
             arrowHead.append('path')
-                .attr({
-                    'd'        : pathData,
-                    'class'    : 'arrowHead', // combine these attrs
-                })
-                .style({
-                    'fill': arrowColor
-                });
+                .attr('d', pathData)
+                .classed('arrowHead', true);
 
             return arrowHead;
         },
@@ -232,6 +203,22 @@ var Arrow = function (workspace) {
             unbindUI();
         },
 
+        bindPoints = function () {
+            var binding = pointsContainer.selectAll('.point').data(pointsData);
+
+            binding.enter()
+                .append('circle')
+                    .attr({
+                        'cx'        : function (d) {return d.x;},
+                        'cy'        : function (d) {return d.y;},
+                        'r'         : 15,
+                        'class'     : 'draggable point'
+                    })
+                    .call(pointDrag);
+
+            binding.exit().remove();
+        }
+
         unbindUI = function () {
             $workspace.off('click', onClickWorkspace);
             addArrowButton.off('click', onClickAddArrow);
@@ -242,6 +229,8 @@ var Arrow = function (workspace) {
         bindUI = function () {
             $workspace.on('click', onClickWorkspace);
             addArrowButton.on('click', onClickAddArrow);
+
+            bindPoints();
         };
 
     bindUI();

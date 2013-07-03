@@ -16,3 +16,19 @@
 .draggable {
     cursor: move;
 }
+
+.arrow-path {
+    fill            : none;
+    stroke          : red;
+    stroke-width    : 5;
+}
+
+.arrowHead {
+    fill            : red;
+}
+
+.point {
+    fill        : rgba(0, 0, 0, 0.3);
+    stroke      : grey;
+    stroke-width: 1;
+}
