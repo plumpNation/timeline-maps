@@ -12,3 +12,7 @@
 .edit-controls {
     background: grey;
 }
+
+.draggable {
+    cursor: move;
+}
