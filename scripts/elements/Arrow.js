@@ -162,23 +162,25 @@ var Arrow = function (workspace) {
                         'l ' + size + ' ' + halfSize + ' ' +
                         'l -' + size + ' ' + halfSize + ' z',
 
-            // create a group to contain the path head
-            arrowHead = arrowHeadContainer.append('g')
-                            .attr('class', 'arrowHead-container'),
-
             pathLength = pathNode.getTotalLength(),
 
             endPoint = pathNode.getPointAtLength(pathLength),
 
-            angle = getRotation(pathNode.getPointAtLength(pathLength - 1), endPoint);
+            angle = getRotation(pathNode.getPointAtLength(pathLength - 1), endPoint),
+
+            // create a group to contain the path head
+            arrowHead = arrowHeadContainer.append('g')
+                            .attr({
+                                'class': 'arrowHead-container',
+                                'transform': 'translate(' + [endPoint.x, endPoint.y] + ')' +
+                                             'rotate(' + angle + ')'
+                             });
 
         // add the triangle graphic for the arrow head
         arrowHead.append('path')
             .attr({
                 'd'        : pathData,
                 'class'    : 'arrowHead', // combine these attrs
-                'transform': 'translate(' + endPoint.x + ',' + endPoint.y + ')' +
-                             'rotate(' + angle + ')'
             })
             .style({
                 'fill': arrowColor
