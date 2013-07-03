@@ -38,35 +38,60 @@ var Arrow = function (workspace) {
                     .y(function (d) { return d.y; })
                     .interpolate('cardinal'),
 
+    /**
+     * Drag handler
+     *
+     * @param  {object} d Data, not used when creating points
+     * @param  {number} i [description]
+     * @return {void}
+     */
+    onDragPoint = function (data, i) {
+
+        var target = d3.select(this),
+            oldX = parseInt(target.attr('cx'), 10),
+            oldY = parseInt(target.attr('cy'), 10),
+            newX = oldX + d3.event.dx,
+            newY = oldY + d3.event.dy
+
+        target.attr({
+            'cx': newX,
+            'cy': newY
+        });
+
+        pointsData[target.attr('data-index')] = {'x': newX, 'y': newY};
+
+        redrawPath(target);
+    },
+
+    pointDrag = d3.behavior.drag().on('drag', onDragPoint),
+
     addArrowButton = $('#draw-arrow'),
 
+    /**
+     * Redraws an arrow.
+     * @return {void}
+     */
     redrawPath = function () {
         $pathContainer.empty();
         drawPath();
     },
 
-    onPointDrag = function () {
-        redrawPath();
-    },
-
     addPoint = function (x, y) {
-        dotsContainer.append('circle')
-            .attr({
-                'cx': x,
-                'cy': y,
-                'r' : 15
-            })
-            .style({
-                'fill'        : 'rgba(0, 0, 0, 0.3)',
-                'stroke'      : 'grey',
-                'stroke-width': 1
-            })
-            .call(d3.behavior.drag().on('drag', onPointDrag));
-    },
-
-    storePoint = function (x, y) {
-        addPoint(x, y);
-        pointsData.push({'x': x, 'y': y});
+        var index = pointsData.push({'x': x, 'y': y}) - 1,
+            k = dotsContainer.append('circle')
+                .style({
+                    'fill'        : 'rgba(0, 0, 0, 0.3)',
+                    'stroke'      : 'grey',
+                    'stroke-width': 1
+                })
+                .attr({
+                    'cx'   : x,
+                    'cy'   : y,
+                    'r'    : 15,
+                    'class': 'draggable',
+                    'data-index': index
+                })
+                .call(pointDrag);
     },
 
     animatePath = function (path, animationSpeed) {
@@ -196,7 +221,7 @@ var Arrow = function (workspace) {
                 x = (e.pageX - parentOffset.left),
                 y = (e.pageY - parentOffset.top);
 
-        storePoint(x, y);
+        addPoint(x, y);
     },
 
     onClickAddArrow = function () {
