@@ -16,21 +16,21 @@ var Arrow = function (workspace) {
         return prefix + str + '-' + idIncrement;
     },
 
-    container = workspace.append('g')
+    wrapper = workspace.append('g')
             .attr({
                 'id': thisId,
                 'class': 'element-container'
-            });
+            }),
 
-    pathContainer = workspace.append('g')
+    pathContainer = wrapper.append('g')
             .attr('id', buildId('curve')),
 
     $pathContainer = $(pathContainer.node()),
 
-    arrowHeadContainer = workspace.append('g')
+    arrowHeadContainer = wrapper.append('g')
             .attr('id', buildId('arrowHead')),
 
-    dotsContainer = workspace.append('g')
+    dotsContainer = wrapper.append('g')
             .attr('id', buildId('dots')),
 
     lineAccessor = d3.svg.line()
