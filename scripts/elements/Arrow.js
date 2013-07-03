@@ -201,7 +201,7 @@ var Arrow = function (workspace) {
         var path = drawPath(),
             arrowHead = drawArrowHead(path);
 
-        // animateArrow(path, arrowHead);
+        animateArrow(path, arrowHead);
         unbindUI();
     },
 
