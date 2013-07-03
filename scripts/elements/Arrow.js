@@ -41,20 +41,17 @@ var Arrow = function (workspace) {
          * @param  {number} i [description]
          * @return {void}
          */
-        onDragPoint = function (data, i) {
+        onDragPoint = function (d, i) {
 
-            var target = d3.select(this),
-                oldX = parseInt(target.attr('cx'), 10),
-                oldY = parseInt(target.attr('cy'), 10),
-                newX = oldX + d3.event.dx,
-                newY = oldY + d3.event.dy
+            var target = d3.select(this);
+
+            d.x += d3.event.dx;
+            d.y += d3.event.dy;
 
             target.attr({
-                'cx': newX,
-                'cy': newY
+                'cx': d.x,
+                'cy': d.y
             });
-
-            pointsData[target.attr('data-index')] = {'x': newX, 'y': newY};
 
             redrawPath(target);
         },
