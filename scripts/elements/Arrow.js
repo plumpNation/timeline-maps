@@ -2,7 +2,7 @@ var Arrow = function (workspace) {
 
     var pointsData = [],
 
-        animationSpeed = 2000,
+        animationSpeed = 2,
 
         idIncrement = $('.arrow-path').length,
 
@@ -16,18 +16,20 @@ var Arrow = function (workspace) {
 
         wrapper = workspace.append('g')
                 .attr('id', thisId)
-                .classed('element-container', true)
+                .attr('class', 'arrow-wrapper'),
 
-        pathContainer = wrapper.append('g')
-                .attr('id', buildId('curve')),
+        arrowContainer = wrapper.append('g')
+                .attr('id', thisId)
+                .classed('arrow-container', true),
 
-        $pathContainer = $(pathContainer.node()),
+        $arrowContainer = $(arrowContainer.node()),
 
-        arrowHeadContainer = wrapper.append('g')
-                .attr('id', buildId('arrowHead')),
+        path,
+        pathLength,
+        arrowHead,
 
         pointsContainer = wrapper.append('g')
-                .attr('id', buildId('points')),
+                            .attr('class', 'arrow-points-container'),
 
         lineAccessor = d3.svg.line()
                         .x(function (d) { return d.x; })
@@ -53,20 +55,21 @@ var Arrow = function (workspace) {
                 'cy': d.y
             });
 
-            redrawPath(target);
+            redrawArrow(target);
         },
 
         pointDrag = d3.behavior.drag().on('drag', onDragPoint),
 
         addArrowButton = $('#draw-arrow'),
 
-        /**
-         * Redraws an arrow.
-         * @return {void}
-         */
-        redrawPath = function () {
-            $pathContainer.empty();
-            drawPath();
+        deleteArrow = function () {
+            path.remove();
+            arrowHead.remove();
+        },
+
+        redrawArrow = function () {
+            deleteArrow();
+            drawArrow();
         },
 
         addPoint = function (x, y) {
@@ -74,9 +77,8 @@ var Arrow = function (workspace) {
             bindPoints();
         },
 
-        animatePath = function (path, animationSpeed) {
-            var pathLength = path.node().getTotalLength(),
-                dashArrayValue = pathLength + ',' + pathLength;
+        animatePath = function (duration) {
+            var dashArrayValue = pathLength + ',' + pathLength;
 
             path
                 .attr({
@@ -84,30 +86,31 @@ var Arrow = function (workspace) {
                     'stroke-dashoffset': pathLength
                 })
                 .transition()
-                    .duration(animationSpeed)
+                    .duration(duration)
                     .ease('linear')
                     .attr('stroke-dashoffset', 0);
         },
 
-        animateArrow = function (path, arrowHead) {
-            animatePath(path, animationSpeed);
-            animateArrowHead(path, arrowHead, animationSpeed);
+        animateArrow = function () {
+            var duration = animationSpeed * pathLength;
+            animatePath(duration);
+            animateArrowHead(duration);
         },
 
         drawPath = function () {
-            var path = pathContainer.append('path')
-                    .attr('d', lineAccessor(pointsData))
-                    .classed('arrow-path', true),
+            path = arrowContainer.append('path')
+                        .attr({
+                            'd'     : lineAccessor(pointsData),
+                            'class' : 'arrow-path'
+                        });
 
-                pathLength = path.node().getTotalLength();
+            pathLength = path.node().getTotalLength();
 
             // store it for later!
             elementCollection[thisId] = {
                 'element': path,
                 'length' : pathLength
             };
-
-            return path;
         },
 
         translateAlong = function (path, arrowHead) {
@@ -139,9 +142,7 @@ var Arrow = function (workspace) {
             };
         },
 
-        animateArrowHead = function (path, arrowHead, duration) {
-            duration = duration || 2000;
-
+        animateArrowHead = function (duration) {
             arrowHead.transition()
                 // transition setters
                 .duration(duration)
@@ -149,37 +150,42 @@ var Arrow = function (workspace) {
                 .attrTween('transform', translateAlong(path, arrowHead));
         },
 
-        drawArrowHead = function (path) {
-            var size = 20, // size of the path head
+        positionArrowHead = function (position) {
+            var position = getArrowHeadPosition(path);
+
+            arrowHead.attr(
+                'transform', 'translate(' + [position.endPoint.x, position.endPoint.y] + ')' +
+                             'rotate(' + position.angle + ')'
+            );
+        },
+
+        getArrowHeadPosition = function (path) {
+            var pathNode   = path.node(),
+                pathLength = pathNode.getTotalLength(),
+                endPoint   = pathNode.getPointAtLength(pathLength),
+                angle      = getRotation(pathNode.getPointAtLength(pathLength - 1), endPoint);
+
+            return {
+                'endPoint': endPoint,
+                'angle': angle
+            };
+        },
+
+        drawArrowHead = function () {
+            var size     = 20, // size of the path head
                 halfSize = size * 0.5,
 
-                pathNode = path.node(),
-
                 // triangle info
-                pathData = 'M 0 -' + halfSize + ' ' +
-                            'l ' + size + ' ' + halfSize + ' ' +
-                            'l -' + size + ' ' + halfSize + ' z',
-
-                pathLength = pathNode.getTotalLength(),
-
-                endPoint = pathNode.getPointAtLength(pathLength),
-
-                angle = getRotation(pathNode.getPointAtLength(pathLength - 1), endPoint),
-
-                // create a group to contain the path head
-                arrowHead = arrowHeadContainer.append('g')
-                                .attr(
-                                    'transform', 'translate(' + [endPoint.x, endPoint.y] + ')' +
-                                                 'rotate(' + angle + ')'
-                                 )
-                                .classed('arrowHead-container', true);
+                arrowHeadShapeData = 'M 0 -' + halfSize + ' ' +
+                            'l '   + size     + ' ' + halfSize + ' ' +
+                            'l -'  + size     + ' ' + halfSize + ' z';
 
             // add the triangle graphic for the arrow head
-            arrowHead.append('path')
-                .attr('d', pathData)
-                .classed('arrowHead', true);
-
-            return arrowHead;
+            arrowHead = arrowContainer.append('path')
+                            .attr({
+                                'd'    : arrowHeadShapeData,
+                                'class': 'arrowHead'
+                            });
         },
 
         onClickWorkspace = function (e) {
@@ -192,11 +198,15 @@ var Arrow = function (workspace) {
             addPoint(x, y);
         },
 
-        onClickAddArrow = function () {
-            var path = drawPath(),
-                arrowHead = drawArrowHead(path);
+        drawArrow = function () {
+            drawPath();
+            drawArrowHead();
+            positionArrowHead();
+        },
 
-            animateArrow(path, arrowHead);
+        onClickAddArrow = function () {
+            drawArrow();
+            animateArrow();
             unbindUI();
         },
 
@@ -214,7 +224,7 @@ var Arrow = function (workspace) {
                     .call(pointDrag);
 
             binding.exit().remove();
-        }
+        },
 
         unbindUI = function () {
             $workspace.off('click', onClickWorkspace);
