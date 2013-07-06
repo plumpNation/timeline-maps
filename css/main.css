@@ -1,3 +1,29 @@
+html,
+body {
+    padding: 0;
+    margin: 0;
+    box-sizing : border-box;
+}
+
+
+#workspace,
+.edit-controls {
+    position   : absolute;
+    top        : 0;
+    left       : 0;
+    width      : 100%;
+}
+
+#workspace {
+    height     : 100%;
+    padding-top: 26px;
+}
+
+.edit-controls {
+    background: grey;
+    z-index: 100;
+}
+
 .element-add-info {
     position: absolute;
     background: white;
@@ -7,10 +33,6 @@
 .element-add-info,
 .element-add-control {
     display: none;
-}
-
-.edit-controls {
-    background: grey;
 }
 
 .draggable {

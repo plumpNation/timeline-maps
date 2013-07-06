@@ -10,16 +10,11 @@ var Arrow = function (workspace) {
 
         thisId = prefix + idIncrement,
 
-        buildId = function (str) {
-            return prefix + str + '-' + idIncrement;
-        },
-
         wrapper = workspace.append('g')
                 .attr('id', thisId)
                 .attr('class', 'arrow-wrapper'),
 
         arrowContainer = wrapper.append('g')
-                .attr('id', thisId)
                 .classed('arrow-container', true),
 
         $arrowContainer = $(arrowContainer.node()),
@@ -133,7 +128,7 @@ var Arrow = function (workspace) {
                 return function (time) {
                     var point = pathNode.getPointAtLength(time * pathTotalLength),
                         pointString = point.x + ',' + point.y,
-                        rotation = getRotation(lastPoint || point, point);
+                        rotation = Utils.getRotation(lastPoint || point, point);
 
                     lastPoint = point;
 
@@ -163,7 +158,7 @@ var Arrow = function (workspace) {
             var pathNode   = path.node(),
                 pathLength = pathNode.getTotalLength(),
                 endPoint   = pathNode.getPointAtLength(pathLength),
-                angle      = getRotation(pathNode.getPointAtLength(pathLength - 1), endPoint);
+                angle      = Utils.getRotation(pathNode.getPointAtLength(pathLength - 1), endPoint);
 
             return {
                 'endPoint': endPoint,
@@ -192,8 +187,8 @@ var Arrow = function (workspace) {
             var parentOffset = $(e.target).parent().offset(),
                     // offset -> method allows you to retrieve the current position of an
                     // element 'relative' to the document.
-                    x = (e.pageX - parentOffset.left),
-                    y = (e.pageY - parentOffset.top);
+                    x = (e.offsetX - parentOffset.left),
+                    y = (e.offsetY - parentOffset.top);
 
             addPoint(x, y);
         },
