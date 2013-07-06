@@ -7,12 +7,14 @@ var workspace = d3.select('#workspace')
 
     $workspace = $(workspace.node()),
 
+    i = 0,
     elementCollection = {},
 
     $arrowControls = $('#add-arrow-info, #draw-arrow');
 
 
 $('#add-arrow').on('click', function () {
-    var newArrow = new Arrow(workspace); // needs options
+    elementCollection['arrow' + i] = new Arrow(workspace); // needs options
+    i += 1;
     $arrowControls.show();
 });

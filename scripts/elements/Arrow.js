@@ -1,3 +1,12 @@
+/**
+ * The Arrow element.
+ *
+ * @todo Should be broken out into a path animation. The arrow head is merely the item to animate,
+ *       and the path could have options for how it animates/is displayed.
+ *
+ * @param  {object} workspace d3 svg element
+ * @return {Arrow}
+ */
 var Arrow = function (workspace) {
 
     var pointsData = [],
@@ -108,48 +117,22 @@ var Arrow = function (workspace) {
             };
         },
 
-        translateAlong = function (path, arrowHead) {
-            var pathNode = path.node(),
-                pathTotalLength = pathNode.getTotalLength();
-
-            /**
-             * The tween function is invoked when the transition starts on each element, being passed
-             * the current datum d, the current index i and the current attribute value a, with the this
-             * context as the current DOM element. The return value of tween must be an interpolator: a
-             * function that maps a parametric value t in the domain [0,1] to a color, number or arbitrary
-             * value.
-             *
-             * @return {function}
-             */
-            return function tween (d, i, a) {
-                var lastPoint;
-
-                // this is the onRenderTick for the path animation for a curve
-                return function (time) {
-                    var point = pathNode.getPointAtLength(time * pathTotalLength),
-                        pointString = point.x + ',' + point.y,
-                        rotation = Utils.getRotation(lastPoint || point, point);
-
-                    lastPoint = point;
-
-                    return 'translate(' + pointString + ') rotate(' + rotation + ')';
-                };
-            };
-        },
-
         animateArrowHead = function (duration) {
+            var tween = Utils.createPathFollowTween(path);
+
             arrowHead.transition()
                 // transition setters
                 .duration(duration)
                 .ease('linear')
-                .attrTween('transform', translateAlong(path, arrowHead));
+                .attrTween('transform', tween);
         },
 
         positionArrowHead = function (position) {
-            var position = getArrowHeadPosition(path);
+            var position = getArrowHeadPosition(path),
+                translate = [position.endPoint.x, position.endPoint.y];
 
             arrowHead.attr(
-                'transform', 'translate(' + [position.endPoint.x, position.endPoint.y] + ')' +
+                'transform', 'translate(' + translate + ')' +
                              'rotate(' + position.angle + ')'
             );
         },
@@ -236,4 +219,13 @@ var Arrow = function (workspace) {
         };
 
     bindUI();
+
+    return {
+        'animation': {
+            'start': function () {
+                animateArrow();
+            }
+        },
+        'node': wrapper.node()
+    };
 };

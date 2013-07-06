@@ -54,3 +54,8 @@ body {
     stroke      : grey;
     stroke-width: 1;
 }
+
+.bounding-box {
+    fill: none;
+    stroke: grey;
+}
