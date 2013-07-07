@@ -5,16 +5,21 @@ var workspace = d3.select('#workspace')
                 'height': '100%'
             }),
 
-    $workspace = $(workspace.node()),
-
     i = 0,
+
     elementCollection = {},
 
     $arrowControls = $('#add-arrow-info, #draw-arrow');
 
-
 $('#add-arrow').on('click', function () {
-    elementCollection['arrow' + i] = new Arrow(workspace); // needs options
-    i += 1;
+    elementCollection['arrow' + i] = new Arrow(workspace, {
+        'onDone': function () {
+            $arrowControls.hide();
+        },
+        'animationSpeed': 2
+    }); // needs options
+
     $arrowControls.show();
+
+    i += 1;
 });

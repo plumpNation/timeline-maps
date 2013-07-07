@@ -16,13 +16,13 @@ var Utils = (function () {
         },
 
         /**
-         * Creates a d3 tween function for use with
-         * @param  {object} path d3 selected path to follow.
+         * Creates a d3 tween function for use with arrow head animation.
+         *
+         * @param  {DOM element} path
          * @return {function}      The tween
          */
-        createPathFollowTween = function (path) {
-            var pathNode = path.node(),
-                pathTotalLength = pathNode.getTotalLength();
+        createPathFollowTween = function (pathNode) {
+            var pathTotalLength = pathNode.getTotalLength();
 
             /**
              * The tween function is invoked when the transition starts on each element, being passed
