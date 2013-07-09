@@ -1,5 +1,5 @@
-/*jslint browser:true */
-/*global $, d3, TweenMax, Linear, Utils */
+/*jslint browser:true, nomen:true */
+/*global $, d3, TweenMax, Linear, Utils, BezierPlugin */
 /**
  * The Arrow element.
  *
@@ -13,6 +13,8 @@ var Arrow = function (workspace, options) {
     'use strict';
 
     var pointsData = [],
+
+        curviness = 0.7,
 
         idIncrement = $('.arrow-path').length,
 
@@ -32,8 +34,8 @@ var Arrow = function (workspace, options) {
         $arrowContainer = $(arrowContainer.node()),
 
         path,
-        pathLength,
         arrowHead,
+        altArrowHead,
 
         pointsContainer = wrapper.append('g').attr('class', 'arrow-points-container'),
 
@@ -45,47 +47,65 @@ var Arrow = function (workspace, options) {
 
         getArrowHeadPosition = function (length) {
             var pathNode   = path.node(),
-                pathLength = pathNode.getTotalLength(),
-                point      = pathNode.getPointAtLength(
-                    (length !== undefined) ? length : pathLength
-                ),
-                prevLength = (length >= 1) ? pathLength - 1 : 0,
-                angle      = Utils.getRotation(pathNode.getPointAtLength(prevLength), point);
+                position,
+                pointFrom,
+                pointTo,
+                prevLength,
+                angle;
+
+            if (length === undefined) {
+                length = pathNode.getTotalLength();
+            }
+
+            position = pointTo = pathNode.getPointAtLength(length);
+
+            if (length < 1) {
+                prevLength = 0;
+                length = 1;
+                pointTo = pathNode.getPointAtLength(length);
+
+            } else {
+                prevLength = length - 1;
+            }
+
+            pointFrom = pathNode.getPointAtLength(prevLength);
+
+            angle = Utils.getRotation(pointFrom, pointTo);
 
             return {
-                'point': point,
+                'point': position,
                 'angle': angle
             };
         },
 
-        /*positionArrowHead = function (length) {
+        positionArrowHead = function (length) {
             var position = getArrowHeadPosition(length),
-                translate = [position.point.x, position.point.y];
+                matrix = Utils.createCssTransformMatrix(position.point, position.angle);
 
-            arrowHead.attr(
-                'transform',
-                'translate(' + translate + ')' +
-                    'rotate(' + position.angle + ')'
-            );
-        },*/
+            arrowHead.attr('style', matrix);
+        },
 
-        drawArrowHead = function () {
-            var size     = 20, // size of the path head
+        drawAltArrowHead = function () {
+            var position = getArrowHeadPosition(0);
+
+            altArrowHead = $('<div>').css({
+                'top': position.point.y + 'px',
+                'left': position.point.x + 'px'
+            }).addClass('alt-arrow-head arrow-head');
+        },
+
+        drawArrowHead = function (_size) {
+            var size     = _size || 20, // size of the path head
                 halfSize = size * 0.5,
 
                 // triangle info
-                arrowHeadShapeData = 'M 0 -' + halfSize + ' ' +
-                            'l '   + size     + ' ' + halfSize + ' ' +
-                            'l -'  + size     + ' ' + halfSize + ' z';
+                arrowHeadShapeData = 'M 0 -'    + halfSize + ' ' +
+                            'l '   + size + ' ' + halfSize + ' ' +
+                            'l -'  + size + ' ' + halfSize + ' z';
+
+            arrowHead = arrowContainer.append('g').attr('class', 'arrow-head');
 
             // add the triangle graphic for the arrow head
-            arrowHead = arrowContainer.append('g').attr('class', 'arrowHead');
-
-            $(arrowHead.node()).css({
-                'left': pointsData[0].x,
-                'top': pointsData[0].y
-            });
-
             arrowHead.append('path').attr('d', arrowHeadShapeData);
         },
 
@@ -95,12 +115,16 @@ var Arrow = function (workspace, options) {
                 'class' : 'arrow-path'
             });
 
-            pathLength = path.node().getTotalLength();
+            // alt path
+            path = workspace.append('path')
+                            .attr('d', Utils.parseBezier(pointsData, curviness))
+                            .attr('class', 'arrow-path');
         },
 
         drawArrow = function () {
             drawPath();
-            drawArrowHead();
+            // drawArrowHead();
+            drawAltArrowHead();
         },
 
         deleteArrow = function () {
@@ -139,7 +163,7 @@ var Arrow = function (workspace, options) {
 
         addArrowButton = $('#draw-arrow'),
 
-        animatePath = function (duration) {
+        animatePath = function (duration, pathLength) {
             var dashArrayValue = pathLength + ',' + pathLength;
 
             path
@@ -153,15 +177,29 @@ var Arrow = function (workspace, options) {
                     .attr('stroke-dashoffset', 0);
         },
 
-        getAnimationDuration = function () {
+        getAnimationDuration = function (pathLength) {
             return options.animationSpeed * pathLength;
         },
 
-        animateArrowHead = function (duration) {
-            var animPoints = _(pointsData).clone();
+        animateAltHead = function (duration) {
+            duration = duration * 0.001;
 
-            console.log(BezierPlugin.bezierThrough(pointsData, 1, true));
+            TweenMax.to(
+                altArrowHead,
+                duration,
+                {
+                    'bezier': {
+                        // 'type': 'quadratic',
+                        'autoRotate': true,
+                        'values': pointsData,
+                        'curviness': curviness
+                    },
+                    'ease': Linear.easeNone
+                }
+            );
+        },
 
+        animateHead = function (duration) {
             duration = duration * 0.001;
 
             TweenMax.to(
@@ -172,7 +210,7 @@ var Arrow = function (workspace, options) {
                         // 'type': 'quadratic',
                         'autoRotate': true,
                         'values': pointsData,
-                        'curviness': 0.7
+                        'curviness': curviness
                     },
                     'ease': Linear.easeNone
                 }
@@ -180,9 +218,12 @@ var Arrow = function (workspace, options) {
         },
 
         animateArrow = function () {
-            var duration = getAnimationDuration();
-            animatePath(duration);
-            animateArrowHead(duration);
+            var pathLength = path.node().getTotalLength(),
+                duration = getAnimationDuration(pathLength);
+
+            animatePath(duration, pathLength);
+            // animateHead(duration);
+            animateAltHead(duration);
         },
 
         bindPoints = function () {
@@ -224,7 +265,8 @@ var Arrow = function (workspace, options) {
 
         onClickAddArrow = function () {
             drawArrow();
-            animateArrow();
+            // positionArrowHead(0);
+            window.setTimeout(animateArrow, 3000);
             unbindUI();
         },
 

@@ -15,6 +15,58 @@ var Utils = (function () {
             return degrees;
         },
 
+        _adaptMatrix = function (matrix) {
+            return '-webkit-transform:' + matrix + ';';
+        }
+
+        /**
+         * A real arse about tit way of creating a transform matrix. We need a matrix because that is
+         * what the BezierPlugin (gsap) uses to animate the arrow head. This is not a fast function,
+         * so should only be used to place the arrow head initially.
+         *
+         * @param  {object} translate An object type thing, maybe an SVG point? {x: n, y: n}
+         * @param  {number} rotation  Between 0 - 360
+         * @return {string}           A css matrix to apply to the arrow head
+         */
+        createCssTransformMatrix = function (translate, rotation) {
+            var translation = [translate.x + 'px', translate.y + 'px'],
+                matrix,
+                i,
+
+                props = [
+                    'MozTransform',
+                    'WebkitTransform',
+                    'OTransform',
+                    'MSTransform',
+                    'transform'
+                ],
+
+                transformString = 'translate(' + translation + ') rotate(' + rotation + 'deg)',
+
+                dummyDiv = $('<div>').addClass('dummy-div').css({
+                    '-webkit-transform': transformString,
+                    'visibility'       : 'hidden',
+                    'position'         : 'absolute'
+                }).appendTo('body'),
+
+                compStyle = window.getComputedStyle(dummyDiv[0], null);
+
+            for (i = 0; i < props.length; i++) {
+
+                matrix = compStyle[props[i]];
+
+                if (matrix != null) {
+                    matrix = _adaptMatrix(matrix);
+                    // break out of the
+                    break;
+                }
+            }
+
+            dummyDiv.remove();
+
+            return matrix || '';
+        },
+
         /**
          * Creates a d3 tween function for use with arrow head animation.
          *
@@ -60,12 +112,40 @@ var Utils = (function () {
                     'height': box.height,
                     'class': 'bounding-box'
                 });
+        },
+
+        /**
+         * Create quadratic path based on gsap's bezierThrough data.
+         *
+         * @return {[type]} [description]
+         */
+        parseBezier = function (bezierData, curviness) {
+            var bezierData = BezierPlugin.bezierThrough(bezierData, curviness || 0.7, true),
+                bezierDataLength = bezierData.x.length,
+                pathData,
+                path,
+                i;
+
+            pathData = 'M' + [bezierData.x[0].a, bezierData.y[0].a];
+
+            pathData += 'Q' + [bezierData.x[0].b, bezierData.y[0].b] + ' ' +
+                        [bezierData.x[0].c, bezierData.y[0].c];
+
+
+            for (i = 1; i < bezierDataLength; i += 1) {
+                pathData += 'Q' + [bezierData.x[i].b, bezierData.y[i].b] + ' ' +
+                        [bezierData.x[i].c, bezierData.y[i].c];
+            }
+
+            return pathData;
         };
 
     return {
+        'parseBezier': parseBezier,
         'getRotation': getRotation,
         'showBoundingBox': showBoundingBox,
-        'createPathFollowTween': createPathFollowTween
+        'createPathFollowTween': createPathFollowTween,
+        'createCssTransformMatrix': createCssTransformMatrix
     };
 
 }());
