@@ -1,5 +1,5 @@
 /*jslint browser:true, nomen:true */
-/*global $, d3, TweenMax, Linear, Utils, BezierPlugin */
+/*global $, d3, TweenMax, Linear, Utils, BezierPlugin, timeline */
 /**
  * The Arrow element.
  *
@@ -187,18 +187,20 @@ var Arrow = function (workspace, options) {
         animateAltHead = function (duration) {
             duration = duration * 0.001;
 
-            TweenMax.to(
-                altArrowHead,
-                duration,
-                {
-                    'bezier': {
-                        // 'type': 'quadratic',
-                        'autoRotate': true,
-                        'values': pointsData,
-                        'curviness': curviness
-                    },
-                    'ease': Linear.easeNone
-                }
+            timeline.add(
+                TweenMax.to(
+                    altArrowHead,
+                    duration,
+                    {
+                        'bezier': {
+                            // 'type': 'quadratic',
+                            'autoRotate': true,
+                            'values': pointsData,
+                            'curviness': curviness
+                        },
+                        'ease': Linear.easeNone
+                    }
+                )
             );
         },
 
