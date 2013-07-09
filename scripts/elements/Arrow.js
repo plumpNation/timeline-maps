@@ -88,10 +88,13 @@ var Arrow = function (workspace, options) {
         drawAltArrowHead = function () {
             var position = getArrowHeadPosition(0);
 
-            altArrowHead = $('<div>').css({
-                'top': position.point.y + 'px',
-                'left': position.point.x + 'px'
-            }).addClass('alt-arrow-head arrow-head');
+            altArrowHead = $('<div>')
+                .addClass('alt-arrow-head arrow-head')
+                .css(
+                    'transform',
+                    'translate(' + [position.point.x + 'px', position.point.y + 'px'] + ')'
+                )
+                .prependTo('#workspace');
         },
 
         drawArrowHead = function (_size) {
@@ -220,6 +223,8 @@ var Arrow = function (workspace, options) {
         animateArrow = function () {
             var pathLength = path.node().getTotalLength(),
                 duration = getAnimationDuration(pathLength);
+
+            console.log(pointsData);
 
             animatePath(duration, pathLength);
             // animateHead(duration);

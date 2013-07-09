@@ -1,71 +1,73 @@
 html,
-body {
-    padding: 0;
-    margin: 0;
-    box-sizing : border-box;
-    position: relative;
-    height: 100%;
-    width: 100%;
+body,
+#workspace {
+    padding                 : 0;
+    margin                  : 0;
+    height                  : 100%;
+    width                   : 100%;
+
+    -webkit-box-sizing      : border-box;
+            box-sizing      : border-box;
 }
 
 
 #workspace,
 .edit-controls {
-    position   : absolute;
-    top        : 0;
-    left       : 0;
-    width      : 100%;
+    position                : absolute;
+    width                   : 100%;
+    top                     : 0;
+    left                    : 0;
 }
 
 #workspace {
-    height     : 100%;
-    padding-top: 26px;
+    height                  : 100%;
+    padding-top             : 26px;
 }
 
 .edit-controls {
-    background: grey;
-    z-index: 100;
+    background              : grey;
+    z-index                 : 100;
 }
 
 .element-add-info {
-    position: absolute;
-    background: white;
-    z-index: -1;
+    position                : absolute;
+    background              : white;
+    z-index                 : -1;
 }
 
 .element-add-info,
 .element-add-control {
-    display: none;
+    display                 : none;
 }
 
 .draggable {
-    cursor: move;
+    cursor                  : move;
 }
 
 .arrow-path {
-    fill            : none;
-    stroke          : red;
-    stroke-width    : 5;
+    fill                    : none;
+    stroke                  : red;
+    stroke-width            : 5;
 }
 
-.arrow-head,
-.alt-arrow-head {
-    fill            : red;
+.arrow-head {
+    fill                    : red;
 }
 
 .alt-arrow-head {
-    position: absolute;
-    width: 30px;
-    height: 30px;
+    position                : absolute;
+    background-color        : red;
+    width                   : 30px;
+    height                  : 30px;
 }
 
 .point {
-    fill        : rgba(0, 0, 0, 0.3);
-    stroke      : grey;
-    stroke-width: 1;
+    fill                    : rgba(0, 0, 0, 0.3);
+    stroke                  : grey;
+    stroke-width            : 1;
 }
 
 .bounding-box {
-    fill: none;
-    stroke: grey;
+    fill                    : none;
+    stroke                  : grey;
 }
