@@ -117,7 +117,7 @@ var Utils = (function () {
         /**
          * Create quadratic path based on gsap's bezierThrough data.
          *
-         * @return {[type]} [description]
+         * @return {string} String to use as a path d attribute.
          */
         parseBezier = function (bezierData, curviness) {
             var bezierData = BezierPlugin.bezierThrough(bezierData, curviness || 0.7, true),

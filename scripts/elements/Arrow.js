@@ -1,5 +1,5 @@
 /*jslint browser:true, nomen:true */
-/*global $, d3, TweenMax, Linear, Utils, BezierPlugin, timeline */
+/*global $, d3, Linear, Utils, BezierPlugin, timeline */
 /**
  * The Arrow element.
  *
@@ -39,14 +39,8 @@ var Arrow = function (workspace, options) {
 
         pointsContainer = wrapper.append('g').attr('class', 'arrow-points-container'),
 
-        lineAccessor = d3.svg.line()
-                        .x(function (d) { return d.x; })
-                        .y(function (d) { return d.y; })
-                        .interpolate('cardinal'),
-                        //.tension(0.7),
-
         getArrowHeadPosition = function (length) {
-            var pathNode   = path.node(),
+            var pathNode = path.node(),
                 position,
                 pointFrom,
                 pointTo,
@@ -94,7 +88,7 @@ var Arrow = function (workspace, options) {
                     'transform',
                     'translate(' + [position.point.x + 'px', position.point.y + 'px'] + ')'
                 )
-                .prependTo('#workspace');
+                .prependTo(application);
         },
 
         drawArrowHead = function (_size) {
@@ -113,11 +107,6 @@ var Arrow = function (workspace, options) {
         },
 
         drawPath = function () {
-            path = arrowContainer.append('path').attr({
-                'd'     : lineAccessor(pointsData),
-                'class' : 'arrow-path'
-            });
-
             // alt path
             path = workspace.append('path')
                             .attr('d', Utils.parseBezier(pointsData, curviness))
@@ -131,17 +120,21 @@ var Arrow = function (workspace, options) {
         },
 
         deleteArrow = function () {
-            path.remove();
-            arrowHead.remove();
-        },
+            if (path) {
+                path.remove();
+            }
 
-        redrawArrow = function () {
-            deleteArrow();
-            drawArrow();
+            if (arrowHead) {
+                arrowHead.remove();
+            }
+
+            if (altArrowHead) {
+                altArrowHead.remove();
+            }
         },
 
         /**
-         * Drag handler
+         * Drag handler, fires loads!
          *
          * @param  {object} d Data, not used when creating points
          * @param  {number} i [description]
@@ -159,7 +152,8 @@ var Arrow = function (workspace, options) {
                 'cy': d.y
             });
 
-            redrawArrow(target);
+            path.attr('d', Utils.parseBezier(pointsData, curviness));
+            // redrawArrowHead();
         },
 
         pointDrag = d3.behavior.drag().on('drag', onDragPoint),
@@ -173,11 +167,12 @@ var Arrow = function (workspace, options) {
                 .attr({
                     'stroke-dasharray' : dashArrayValue,
                     'stroke-dashoffset': pathLength
-                })
-                .transition()
-                    .duration(duration)
-                    .ease('linear')
-                    .attr('stroke-dashoffset', 0);
+                });
+
+            /*timeline.to(path.node(), duration, {
+                'attr': {'stroke-dashoffset': 0},
+                ease: Linear.easeNone
+            });*/
         },
 
         getAnimationDuration = function (pathLength) {
@@ -185,31 +180,30 @@ var Arrow = function (workspace, options) {
         },
 
         animateAltHead = function (duration) {
-            duration = duration * 0.001;
+            var speed = duration * 0.001,
+                node = altArrowHead[0],
+                tween;
 
-            timeline.add(
-                TweenMax.to(
-                    altArrowHead,
-                    duration,
-                    {
-                        'bezier': {
-                            // 'type': 'quadratic',
-                            'autoRotate': true,
-                            'values': pointsData,
-                            'curviness': curviness
-                        },
-                        'ease': Linear.easeNone
-                    }
-                )
+            timeline.to(
+                node,
+                speed,
+                {
+                    'bezier': {
+                        'values'    : pointsData,
+                        'autoRotate': true,
+                        'curviness' : curviness
+                    },
+                    'ease': Linear.easeNone
+                }
             );
         },
 
-        animateHead = function (duration) {
-            duration = duration * 0.001;
+        /*animateHead = function (duration) {
+            var speed = duration * 0.001;
 
-            TweenMax.to(
+            timeline.to(
                 arrowHead,
-                duration,
+                speed,
                 {
                     'bezier': {
                         // 'type': 'quadratic',
@@ -220,17 +214,16 @@ var Arrow = function (workspace, options) {
                     'ease': Linear.easeNone
                 }
             );
-        },
+        },*/
 
         animateArrow = function () {
             var pathLength = path.node().getTotalLength(),
                 duration = getAnimationDuration(pathLength);
 
-            console.log(pointsData);
-
-            animatePath(duration, pathLength);
-            // animateHead(duration);
+            // animatePath(duration, pathLength);
             animateAltHead(duration);
+
+            timeline.play();
         },
 
         bindPoints = function () {
@@ -273,7 +266,7 @@ var Arrow = function (workspace, options) {
         onClickAddArrow = function () {
             drawArrow();
             // positionArrowHead(0);
-            window.setTimeout(animateArrow, 3000);
+            animateArrow();
             unbindUI();
         },
 
@@ -282,6 +275,11 @@ var Arrow = function (workspace, options) {
             addArrowButton.on('click', onClickAddArrow);
 
             bindPoints();
+
+            $('body').on('mousedown', '.draggable', function (e) {
+                console.log(e.target);
+                $(e.target).one('mouseup', animateArrow)
+            });
         };
 
     bindUI();

@@ -2,10 +2,8 @@ var timeline,
 
     $slider = $('#slider'),
 
-    workspace = d3.select('#workspace').append('svg').attr({
-        'width' : '100%',
-        'height': '100%'
-    }),
+    application = document.getElementById('application-container'),
+    workspace = d3.select('#workspace'),
 
     i = 0,
 
@@ -32,7 +30,6 @@ var timeline,
 
     onSliderChange = function (e) {
         var value = $(e.target).val();
-        console.log(value);
         timeline.pause();
         //adjust the timeline's progress() based on slider value
         timeline.progress(value * 0.01);
@@ -48,15 +45,35 @@ var timeline,
             });
         });
 
-        timeline = new TimelineMax({
-            onUpdate : updateSlider,
-            delay    : 1
-        });
-
         $('#add-arrow').on('click', addArrow);
+        // $('#add-arrow').on('click', runTest);
     },
 
+    rand = function () {
+        return Math.random() * 1000;
+    }
+
+    /*runTest = function () {
+        var test = $('<div>').appendTo('body').css('background', 'red').width(200).height(200);
+
+        timeline.to(test[0], 1, {
+            'bezier': {
+                'values': [
+                    { x: rand(), y: rand() },
+                    { x: rand(), y: rand() },
+                    { x: rand(), y: rand() }
+                ]
+            }
+        });
+    },*/
+
     init = function () {
+        timeline = new TimelineMax({
+            onUpdate : updateSlider
+        });
+
+        timeline.pause();
+
         bindUI();
     };
 

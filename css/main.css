@@ -1,6 +1,7 @@
 html,
 body,
-#workspace {
+#workspace,
+#application-container {
     padding                 : 0;
     margin                  : 0;
     height                  : 100%;
@@ -10,8 +11,8 @@ body,
             box-sizing      : border-box;
 }
 
-
 #workspace,
+#application-container,
 .edit-controls {
     position                : absolute;
     width                   : 100%;
@@ -19,7 +20,7 @@ body,
     left                    : 0;
 }
 
-#workspace {
+#application-container {
     height                  : 100%;
     padding-top             : 26px;
 }
