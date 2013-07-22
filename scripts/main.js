@@ -16,7 +16,9 @@ var timeline,
             'onDone': function () {
                 $arrowControls.hide();
             },
-            'animationSpeed': 2
+            'headSize': 15,
+            'timelineLabel': 'arrow_' + i,
+            'animationSpeed': 2,
         }); // needs options
 
         $arrowControls.show();

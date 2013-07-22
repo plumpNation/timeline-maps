@@ -1,6 +1,8 @@
 html,
 body,
 #workspace,
+.layer,
+.layer svg,
 #application-container {
     padding                 : 0;
     margin                  : 0;
@@ -13,6 +15,8 @@ body,
 
 #workspace,
 #application-container,
+.layer,
+.layer svg,
 .edit-controls {
     position                : absolute;
     width                   : 100%;
@@ -71,4 +75,10 @@ body,
 .bounding-box {
     fill                    : none;
     stroke                  : grey;
+}
+
+.arrow-head-container {
+    position: absolute;
+    width: 30px;
+    height: 30px;
 }

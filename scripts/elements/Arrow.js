@@ -14,7 +14,11 @@ var Arrow = function (workspace, options) {
 
     var pointsData = [],
 
-        curviness = 0.7,
+        bezierData,
+
+        speed = options.speed || 1,
+
+        curviness = options.curviness || 0.7,
 
         idIncrement = $('.arrow-path').length,
 
@@ -24,12 +28,17 @@ var Arrow = function (workspace, options) {
 
         $workspace = $(workspace.node()),
 
-        wrapper = workspace.append('g')
+        layer = workspace.append('div')
+                        .attr('class', 'layer'),
+
+        wrapper = layer.append('svg').append('g')
                 .attr('id', thisId)
                 .attr('class', 'arrow-wrapper'),
 
         arrowContainer = wrapper.append('g')
-                .classed('arrow-container', true),
+                .attr('class', 'arrow-container'),
+
+        headContainer = layer.append('div').attr('class', 'arrow-head-container'),
 
         $arrowContainer = $(arrowContainer.node()),
 
@@ -79,44 +88,64 @@ var Arrow = function (workspace, options) {
             arrowHead.attr('style', matrix);
         },
 
-        drawAltArrowHead = function () {
-            var position = getArrowHeadPosition(0);
-
-            altArrowHead = $('<div>')
-                .addClass('alt-arrow-head arrow-head')
-                .css(
-                    'transform',
-                    'translate(' + [position.point.x + 'px', position.point.y + 'px'] + ')'
-                )
-                .prependTo(application);
-        },
-
-        drawArrowHead = function (_size) {
-            var size     = _size || 20, // size of the path head
+        drawArrowHead = function () {
+            var size     = options.headSize || 20, // size of the path head
                 halfSize = size * 0.5,
 
                 // triangle info
                 arrowHeadShapeData = 'M 0 -'    + halfSize + ' ' +
                             'l '   + size + ' ' + halfSize + ' ' +
-                            'l -'  + size + ' ' + halfSize + ' z';
+                            'l -'  + size + ' ' + halfSize + ' z',
 
-            arrowHead = arrowContainer.append('g').attr('class', 'arrow-head');
+                headSizePx = size + 'px';
 
             // add the triangle graphic for the arrow head
-            arrowHead.append('path').attr('d', arrowHeadShapeData);
+            arrowHead = headContainer.append('svg').append('path')
+                .attr('d', arrowHeadShapeData);
+
+            headContainer.node().style.webkitTransform = 'translate(' + [headSizePx, headSizePx] + ')';
+
+            var startPoint = path.node().getPointAtLength(0);
+
+            headContainer.node().style.webkitTransform = 'matrix(1, 0, 0, 1, ' + [
+                (startPoint.x - size),
+                (startPoint.y - size)
+            ] + ')';
         },
 
-        drawPath = function () {
+        trimPointsData = function (pd) {
+            for (var i = 0; i < pd.length; i += 1) {
+                pd[i].x -= options.headSize;
+                pd[i].y -= options.headSize;
+            }
+
+            return pd;
+        },
+
+        drawPath = function (bezierData) {
             // alt path
-            path = workspace.append('path')
-                            .attr('d', Utils.parseBezier(pointsData, curviness))
+            var length,
+                pathData = Utils.parseBezier(bezierData),
+                startPoint,
+                length;
+
+            // set path data
+            path = arrowContainer.append('path')
+                            .attr('d', pathData)
                             .attr('class', 'arrow-path');
+
+            // get the path length
+            length = path.node().getTotalLength();
+
+            /*path.attr('stroke-dasharray', [length, length].toString());
+            path.attr('stroke-dashoffset', length);*/
         },
 
         drawArrow = function () {
-            drawPath();
-            // drawArrowHead();
-            drawAltArrowHead();
+            bezierData = Utils.getBezierData(pointsData, curviness);
+            drawPath(bezierData);
+            drawArrowHead();
+            animateArrow();
         },
 
         deleteArrow = function () {
@@ -126,10 +155,6 @@ var Arrow = function (workspace, options) {
 
             if (arrowHead) {
                 arrowHead.remove();
-            }
-
-            if (altArrowHead) {
-                altArrowHead.remove();
             }
         },
 
@@ -153,77 +178,45 @@ var Arrow = function (workspace, options) {
             });
 
             path.attr('d', Utils.parseBezier(pointsData, curviness));
-            // redrawArrowHead();
         },
 
         pointDrag = d3.behavior.drag().on('drag', onDragPoint),
 
         addArrowButton = $('#draw-arrow'),
 
-        animatePath = function (duration, pathLength) {
-            var dashArrayValue = pathLength + ',' + pathLength;
-
-            path
-                .attr({
-                    'stroke-dasharray' : dashArrayValue,
-                    'stroke-dashoffset': pathLength
-                });
-
-            /*timeline.to(path.node(), duration, {
-                'attr': {'stroke-dashoffset': 0},
-                ease: Linear.easeNone
-            });*/
-        },
-
         getAnimationDuration = function (pathLength) {
             return options.animationSpeed * pathLength;
         },
 
-        animateAltHead = function (duration) {
-            var speed = duration * 0.001,
-                node = altArrowHead[0],
-                tween;
+        animateArrow = function () {
+            timeline.to(
+                path,
+                speed,
+                {
+                    'attr': {
+                        'stroke-dashoffset': 0
+                    },
+                    'ease': Linear.easeNone
+                },
+                'woop'
+            );
+
+            pointsData.shift();
 
             timeline.to(
-                node,
+                headContainer,
                 speed,
                 {
                     'bezier': {
-                        'values'    : pointsData,
+                        'type': 'thru',
+                        'values'    : trimPointsData(pointsData),
                         'autoRotate': true,
                         'curviness' : curviness
                     },
                     'ease': Linear.easeNone
-                }
+                },
+                'woop'
             );
-        },
-
-        /*animateHead = function (duration) {
-            var speed = duration * 0.001;
-
-            timeline.to(
-                arrowHead,
-                speed,
-                {
-                    'bezier': {
-                        // 'type': 'quadratic',
-                        'autoRotate': true,
-                        'values': pointsData,
-                        'curviness': curviness
-                    },
-                    'ease': Linear.easeNone
-                }
-            );
-        },*/
-
-        animateArrow = function () {
-            var pathLength = path.node().getTotalLength(),
-                duration = getAnimationDuration(pathLength);
-
-            // animatePath(duration, pathLength);
-            animateAltHead(duration);
-
-            timeline.play();
         },
 
         bindPoints = function () {
@@ -265,7 +258,6 @@ var Arrow = function (workspace, options) {
 
         onClickAddArrow = function () {
             drawArrow();
-            // positionArrowHead(0);
             animateArrow();
             unbindUI();
         },

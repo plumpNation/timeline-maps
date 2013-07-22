@@ -17,7 +17,7 @@ var Utils = (function () {
 
         _adaptMatrix = function (matrix) {
             return '-webkit-transform:' + matrix + ';';
-        }
+        },
 
         /**
          * A real arse about tit way of creating a transform matrix. We need a matrix because that is
@@ -119,9 +119,8 @@ var Utils = (function () {
          *
          * @return {string} String to use as a path d attribute.
          */
-        parseBezier = function (bezierData, curviness) {
-            var bezierData = BezierPlugin.bezierThrough(bezierData, curviness || 0.7, true),
-                bezierDataLength = bezierData.x.length,
+        parseBezier = function (bezierData) {
+            var bezierDataLength = bezierData.x.length,
                 pathData,
                 path,
                 i;
@@ -138,9 +137,36 @@ var Utils = (function () {
             }
 
             return pathData;
+        },
+
+        getBezierData = function (points, curviness) {
+            var bezierData = BezierPlugin.bezierThrough(points, curviness, true);
+
+            return bezierData;
+        },
+
+        /**
+         * Accepts greensock's bezierData from the BezierPlugin.bezierThrough function.
+         * @param  {object} bezierData Greensock's bezier data.
+         * @return {object}            [description]
+         */
+        makeQuadraticBezierData = function (bezierData) {
+            var quadraticBezierData = [{
+                    x: bezierData.x[0].c,
+                    y: bezierData.y[0].c
+                }],
+                i;
+
+            for (i = 1; i < bezierData.x.length; i += 1) {
+                quadraticBezierData.push({x: bezierData.x[i].a, y: bezierData.y[i].a});
+                quadraticBezierData.push({x: bezierData.x[i].b, y: bezierData.y[i].b});
+            }
+
+            return quadraticBezierData;
         };
 
     return {
+        'getBezierData': getBezierData,
         'parseBezier': parseBezier,
         'getRotation': getRotation,
         'showBoundingBox': showBoundingBox,
